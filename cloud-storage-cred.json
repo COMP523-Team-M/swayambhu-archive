@@ -1,0 +1,13 @@
+{
+  "type": "service_account",
+  "project_id": "swayambhu-archive",
+  "private_key_id": "67021334d1a9d24b40a19e653021d231ef632be4",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDLmpio0rGdQFxA\n9K3bJEwN1oW9irZbpQGalH8RCF7YfXfdfX1lstAd5yBARdqT2RdB2yKPXvw3e5Ej\nDrWF2Jl61/fy+FJhtIZMmn7D2bUdrTwsA/fdgb85gp9y9Pwt1I/vWABg3Vimzt8y\n9wZ1ONbx6XVUFPParW1ppul7eruXbnFzmrngMZp5i3YW33Xdb+K9pKR9Eh0TvzbJ\nv44wGwAtnNDDQJOn+iwBfx7SErK8FuFZWjXK6zHC1IUtiWqsSV7TZM32NKkRcVxS\nYTKQ8M1QJI/oSNl+08UoJHW0qCxDVwcKZTe03Ik1vlR/nlIM7fN3iO/Gg9MjRWWj\nOTBapvoTAgMBAAECggEADWXgvwmph6TxLSxGUIUrJNhfODs4VGZSthhb42pyMbue\nUQq6XyBALIEsELt7O0vUb8OUZ588tTrCMNT9jvXTS7XwhAjHnjq7gUj29If1lu+/\nMoPkVXgw3DKQFlSwT4rzgDC05BFMwLu2P+u1464LPvBs6+aHd9yXtmJPocEdNqt/\nJOflYydS7RgWRWN9Fc+HQZ5kb1+HLQhhlNFhmF3VDhRbPiLjquK8XIiTaUSPxJfb\n1ZqP1Q5xl7vNvvBdO9l2xPQeDBFsRoHF/EGQttpMH+kCbv7efgjVz8V7j7eMqGYo\nKwYj4vhD9UAryYZbyIJMGQj2jA/HwtS+W9Davn0V2QKBgQD0/zu8Bt7mLWsvn3RX\nfYOuVluX4IJ3uAlOsxgE9S5Fk18TiQF4aAxb8cOUSCnqWPr4oto5ci0ZvgUo1Pv7\n45ul7HWdjF9Bu5NY6MFm2zm0Xa/h1pv64rRLzdTBwyvnLS7/U3hjPe79FcN3KZDM\nm5j6nQFAx1IaSInTzCQAV8gB7QKBgQDUv3XUAiUZNbv+MiucJIyO8aQU/tFKUBEG\nWcs8JawAHpFiI3rMsWQp7gf6Q+mZjdXflFgInxSsvjfa4hLIZPVSg+pGI/AYfxKd\nD4p8pt/SBa5GeNanil3P6ZpiCX8MqT1zE21Bt8C++n3lS/PrHLPCXUNQDbHJObpM\nyz7TYDtr/wKBgQDn5eNTwakgdKM9S5Ai9DI9RY6i/qZfzXo53PmCT9UBlFHtOsSC\nhPIV4Yx/gaLzKFA+Il+u+mzILf3SPW9aaIG+l0ho3SKZJIR/JqlRw3YmTHubp7iy\ny/1etzCIS0X2JuWSVh7gyRG6yuvekiB2G1288fnqqAAF0t1q9ZKqJGyzrQKBgQCk\nby9FJDtEVvHssR5f2ygAu+gUijd9dpESFYkt/fgJR5cbAU1CtME0X1QvLRp6otPx\nsRix4TL7qTJGrYHS/aVXl7oVaGWEqYLbfk2NtvU7wURIF9HhQOLtdiLrL2fRg2WJ\ncjR6HOqPMdDoz2HCETcnPSpvz4XggAvsmxL+EV0cRQKBgGTclAJoeloafjB/h2XL\nicU8mD49sxAe3umuwVPJbokyZ7qhxTYgxS6S/oq9qhBz219howdEC9fz+NNy7f2T\nughDjSjXzQpF/0eNSmHNRqvac62h2IRRpueQGSIbLN+gw3m1NaUnIyc8XmqibRU7\n2PLigeE5p5WCGPr16vqe+WCp\n-----END PRIVATE KEY-----\n",
+  "client_email": "cloud-storage-service-account@swayambhu-archive.iam.gserviceaccount.com",
+  "client_id": "102470528153042547770",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/cloud-storage-service-account%40swayambhu-archive.iam.gserviceaccount.com",
+  "universe_domain": "googleapis.com"
+}
