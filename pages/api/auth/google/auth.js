@@ -1,5 +1,5 @@
 // pages/api/auth.js
-import { oauth2Client } from "../../utils/youtube";
+import { oauth2Client } from "../../../../utils/youtube";
 
 export default function handler(req, res) {
   const scopes = ["https://www.googleapis.com/auth/youtube.upload"];

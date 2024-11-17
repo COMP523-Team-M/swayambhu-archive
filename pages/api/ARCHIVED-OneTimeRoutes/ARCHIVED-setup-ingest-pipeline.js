@@ -1,5 +1,5 @@
 // pages/api/setup-ingest-pipeline.js
-import client from '../../utils/elasticsearch';
+import client from '../../../utils/elasticsearch';
 
 async function createIngestPipeline() {
   try {

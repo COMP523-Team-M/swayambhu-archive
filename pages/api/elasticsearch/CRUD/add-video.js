@@ -1,13 +1,9 @@
-//THIS IS THE API ENDPOINT THAT WILL BE USED TO ADD A VIDEO AND ITS TRANSCRIPT TO ELASTICSEARCH
 
+// pages/api/elasticsearch/add-video.js
 
-
-
-// pages/api/elasticsearch/add-video-nonrand-chunking.js
-
-import client from '../../../utils/elasticsearch';
+import client from '../../../../utils/elasticsearch';
 import { v4 as uuidv4 } from 'uuid';
-import { generateEmbedding } from '../../../utils/generateEmbeddings';
+import { generateEmbedding } from '../../../../utils/generateEmbeddings';
 
 /**
  * Converts a time string (e.g., "00:00.4") to total seconds as an integer.
@@ -32,11 +28,11 @@ function extractTranscriptSegments(results, baseVideoURL) {
     const startTime = alternative.words[0].startOffset.replace('s', '');
     const endTime = alternative.words[alternative.words.length - 1].endOffset.replace('s', '');
 
-    // Convert start and end times to seconds
+    // Converting start and end times to seconds
     const startTimeInSeconds = convertTimeToSeconds(startTime);
     const endTimeInSeconds = convertTimeToSeconds(endTime);
 
-    // Create a link to start the video at the beginning of this segment
+    // Creating link to start the video at the beginning of this segment
     const videoLinkToSnippet = `${baseVideoURL}&t=${startTimeInSeconds}s`;
 
     return {
@@ -156,3 +152,6 @@ export default async function handler(req, res) {
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
 }
+
+
+

@@ -1,6 +1,6 @@
 // pages/api/elasticsearch/nlp-search.js
-import { analyzeQuery } from '../../../utils/openaiQueryAnalysis';
-import { searchVideos, searchSnippets } from '../../../utils/elasticsearchQueries';
+import { analyzeQuery } from '../../../../utils/ARCHIVED/ARCHIVED-openaiQueryAnalysis';
+import { searchVideos, searchSnippets } from '../ARCHIVED/ARCHIVED-keywordSearch-v1';
 
 export default async function handler(req, res) {
   if (req.method === 'GET') {

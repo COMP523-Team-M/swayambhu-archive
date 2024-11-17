@@ -1,5 +1,5 @@
 // utils/elasticsearchQueries.js
-import client from './elasticsearch';
+import client from '../../../../utils/elasticsearch';
 
 // Function to search videos (video-level)
 export async function searchVideos(keywords) {

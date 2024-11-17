@@ -1,5 +1,5 @@
 // pages/api/elasticsearch/update-video.js
-import client from '../../../utils/elasticsearch';
+import client from '../../../../utils/elasticsearch';
 import { v4 as uuidv4 } from 'uuid';
 
 /**

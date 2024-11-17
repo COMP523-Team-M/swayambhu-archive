@@ -1,9 +1,9 @@
 // pages/api/upload-video.js
-import { uploadVideo } from "../../utils/uploadVideo";
-import { oauth2Client } from "../../utils/youtube";
-import { getTokens } from "../../utils/tokenUtils";
+import { uploadVideo } from "../../../utils/uploadVideo";
+import { oauth2Client } from "../../../utils/youtube";
+import { getTokens } from "../../../utils/tokenUtils";
 import { generateTranscript } from "../../utils/generateTranscript";
-import client from "../../utils/elasticsearch";
+import client from "../../../utils/elasticsearch";
 import { v4 as uuidv4 } from 'uuid';
 
 export default async function handler(req, res) {

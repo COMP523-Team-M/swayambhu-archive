@@ -1,5 +1,5 @@
 // pages/api/setup-indexes.js
-import client from '../../utils/elasticsearch';
+import client from '../../../utils/elasticsearch';
 
 export default async function handler(req, res) {
   if (req.method === 'POST') {
