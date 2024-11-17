@@ -36,3 +36,5 @@ yarn-error.log*
 next-env.d.ts
 
 boilerplate.tsx
+cloud-storage-cred.json
+speech-to-text-cred.json
