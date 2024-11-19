@@ -14,7 +14,18 @@ import { generateEmbedding } from '../../../../utils/generateEmbeddings';
  */
 export async function combinedSearch(keywords, queryEmbedding, index, { filters = {}, from = 0, size = 10 }) {
   try {
+    console.log('\n=== Combined Search Debug ===');
+    console.log('Input params:', {
+      keywords,
+      index,
+      filters,
+      hasEmbedding: !!queryEmbedding,  // Just show if we have an embedding
+      embeddingLength: queryEmbedding?.length
+    });
+
     const { uploadDate, location, tags } = filters;
+    
+    const embeddingField = index === 'videos' ? 'transcriptEmbedding' : 'snippetEmbedding';
     
     const combinedQuery = {
       index,
@@ -27,30 +38,35 @@ export async function combinedSearch(keywords, queryEmbedding, index, { filters 
                 multi_match: {
                   query: keywords.join(' '), // Join keywords array into space-separated string
                   fields: index === 'videos' 
-                    ? ['vidDescription^2', 'tags^1.5', 'location'] 
+                    ? ['vidDescription^2', 'tags^1.5', 'location', 'transcript', 'englishTranslation'] 
                     : ['transcriptSnippet'],
                   fuzziness: 'AUTO',
                   type: 'best_fields',
-                },
+                  boost: 0.2
+                }
               },
-              // Semantic search using embeddings
+              // Semantic search using embeddings with improved normalization
               {
                 script_score: {
                   query: { match_all: {} },
                   script: {
-                    source: "cosineSimilarity(params.query_vector, doc['transcriptEmbedding']) + 1.0",
-                    params: { query_vector: queryEmbedding },
-                  },
-                },
-              },
+                    source: `
+                      double similarity = cosineSimilarity(params.query_vector, '${embeddingField}');
+                      double normalizedScore = 1.0 / (1.0 + Math.exp(-12.0 * (similarity - 0.55)));
+                      return normalizedScore * 0.8;
+                    `,
+                    params: { query_vector: queryEmbedding }
+                  }
+                }
+              }
             ],
             filter: [], // Filters will be added dynamically
-            minimum_should_match: 1,
-          },
+            minimum_should_match: 1
+          }
         },
         from,
-        size,
-      },
+        size
+      }
     };
 
     // Adding filters dynamically if they are provided
@@ -64,14 +80,29 @@ export async function combinedSearch(keywords, queryEmbedding, index, { filters 
       combinedQuery.body.query.bool.filter.push({ terms: { tags } });
     }
 
+    console.log('\nConstructed Query:', {
+      index,
+      searchFields: index === 'videos' 
+        ? ['vidDescription^2', 'tags^1.5', 'location', 'transcript', 'englishTranslation'] 
+        : ['transcriptSnippet'],
+      embeddingField,
+      filters: combinedQuery.body.query.bool.filter,
+      minimum_should_match: combinedQuery.body.query.bool.minimum_should_match
+    });
+    
     const response = await client.search(combinedQuery);
+    console.log('\nSearch Results:', {
+      total: response.hits.total,
+      maxScore: response.hits.max_score,
+      hits: response.hits.hits.length
+    });
 
     return response.hits.hits.map((hit) => ({
       ...hit._source,
       score: hit._score,
     }));
   } catch (error) {
-    console.error('Error performing combined search:', error);
+    console.error('\nCombined search error:', error);
     throw error;
   }
 }

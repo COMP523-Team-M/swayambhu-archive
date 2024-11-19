@@ -1,80 +1,110 @@
-import { Configuration, OpenAIApi } from 'openai';
+import { OpenAI } from 'openai';
 import { generateEmbedding } from './generateEmbeddings';
 
-const FILTERABLE_FIELDS = ['uploadDate', 'location', 'tags']; // fields that can be filtered on, to update just add to array
+// Define filterable fields per index type
+const FILTERABLE_FIELDS = {
+  video: ['uploadDate', 'location'],
+  snippet: ['uploadDate']  // Snippets don't have location field
+};
 
-const openai = new OpenAIApi(
-  new Configuration({
-    apiKey: process.env.OPENAI_API_KEY,
-  })
-);
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
-/**
- * Analyze the user's query using OpenAI to determine:
- * - Search type (keyword, semantic, combined)
- * - Search level (videos or snippets)
- * - Extracted filters for video-level searches
- * - Keywords for keyword and combined searches
- * - Embeddings for semantic and combined searches
- * 
- * @param {string} query - The user's natural language search query
- * @returns {Object} Analysis result with search type, level, keywords, embeddings, and filters
- */
 export async function analyzeQuery(query) {
   try {
     // Step 1: Using OpenAI to classify and analyze the query
     const prompt = `
-      You are a smart search assistant. Analyze the following query and provide:
-      1. The search type (keyword, semantic, or combined) based on intent.
-      2. Whether the search is at the video level or snippet level.
-      3. Extract important keywords from the query for keyword-based searching.
-      4. Extract filters if any filterable fields (${FILTERABLE_FIELDS.join(
-        ', '
-      )}) are mentioned in the query.
-      Query: "${query}"
-      Respond in JSON format as:
+      You are a search query analyzer for a video search system. Analyze this query: "${query}"
+
+      Classification Rules:
+      1. Search Type:
+         - "keyword": Simple queries with 1-3 specific terms (e.g., "pashupatinath temple", "evening aarti")
+         - "semantic": Natural language questions or descriptions (e.g., "what activities happen at temples in evening?")
+         - "combined": Complex queries with both specific terms and context (e.g., "evening aarti ceremonies at temples in Kathmandu")
+
+      2. Search Level:
+         - "video": For broad queries about entire videos or when time isn't important
+         - "snippet": For queries about specific moments or when timing matters
+
+      3. Extract only these filters if specifically mentioned:
+         - uploadDate: Only if a specific date is mentioned (YYYY-MM-DD format)
+         - location: Only if a specific place/location is mentioned
+
+      4. Keywords:
+         - Include all important search terms
+         - Include topics and categories as keywords, not filters
+
+      Respond in JSON format:
       {
         "searchType": "keyword|semantic|combined",
         "level": "video|snippet",
-        "keywords": ["keyword1", "keyword2", ...],
+        "keywords": ["important", "search", "terms"],
         "filters": {
-          "uploadDate": "value" (optional),
-          "location": "value" (optional),
-          "tags": ["value1", "value2"] (optional)
-        }
+          "uploadDate": "YYYY-MM-DD" (only if specific date mentioned),
+          "location": "place name" (only if location mentioned)
+        },
+        "reasoning": "Brief explanation of why this classification was chosen"
       }
     `;
 
-    const response = await openai.createChatCompletion({
+    console.log('\nSending query to OpenAI for analysis...');
+    const response = await openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [{ role: 'user', content: prompt }],
-      temperature: 0, 
+      temperature: 0,
     });
 
-    const result = JSON.parse(response.data.choices[0].message.content);
+    const result = JSON.parse(response.choices[0].message.content);
+    console.log('OpenAI Analysis:', result.reasoning);
 
-    // Step 2: Extracting details from OpenAI response
-    const { searchType, level, filters, keywords } = result;
+    // Filter out fields that don't exist in the current index
+    const validFilters = {};
+    const allowedFields = FILTERABLE_FIELDS[result.level];
+    
+    if (result.filters) {
+      Object.entries(result.filters).forEach(([key, value]) => {
+        if (allowedFields.includes(key)) {
+          validFilters[key] = value;
+        }
+      });
+    }
 
-    // Step 3: Handle specific search types
-    if (searchType === 'semantic' || searchType === 'combined') {
+    // Step 2: Validate and adjust the classification
+    const wordCount = query.split(' ').length;
+    const hasQuestionWords = /^(what|where|when|how|why|who)\b/i.test(query);
+    
+    // Override rules
+    if (hasQuestionWords && result.searchType === 'keyword') {
+      console.log('Overriding to semantic search due to question format');
+      result.searchType = 'semantic';
+    }
+    if (wordCount > 6 && result.searchType === 'keyword') {
+      console.log('Overriding to combined search due to query complexity');
+      result.searchType = 'combined';
+    }
+
+    // Step 3: Generate embeddings for semantic/combined search
+    if (result.searchType === 'semantic' || result.searchType === 'combined') {
+      console.log('Generating embeddings for', result.searchType, 'search');
       const queryEmbedding = await generateEmbedding(query);
       return {
-        searchType,
-        level,
-        filters,
-        keywords: searchType === 'combined' ? keywords : undefined,
+        searchType: result.searchType,
+        level: result.level,
+        filters: validFilters,  // Use validated filters
+        keywords: result.searchType === 'combined' ? result.keywords : undefined,
         queryEmbedding,
       };
     }
 
-    // Step 4: Handle keyword-only search
+    // Step 4: Return keyword search parameters
     return {
-      searchType,
-      level,
-      filters,
-      keywords,
+      searchType: result.searchType,
+      level: result.level,
+      filters: validFilters,  // Use validated filters
+      keywords: result.keywords,
     };
+
   } catch (error) {
     console.error('Error analyzing query:', error);
     throw new Error('Failed to analyze query');

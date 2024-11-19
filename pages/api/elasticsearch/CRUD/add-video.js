@@ -1,4 +1,3 @@
-
 // pages/api/elasticsearch/add-video.js
 
 import client from '../../../../utils/elasticsearch';
@@ -6,13 +5,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { generateEmbedding } from '../../../../utils/generateEmbeddings';
 
 /**
- * Converts a time string (e.g., "00:00.4") to total seconds as an integer.
- * @param {string} timeString - The time in "minutes:seconds.milliseconds" format.
- * @returns {number} The total time in seconds, rounded down to the nearest integer.
+ * Converts a time string (e.g., "0.320s" or "00:00.4") to total seconds as an integer.
+ * @param {string} timeString - The time string to convert
+ * @returns {number} The total time in seconds, rounded down to the nearest integer
  */
 function convertTimeToSeconds(timeString) {
-  const [minutes, seconds] = timeString.split(':').map(parseFloat);
-  return Math.floor(minutes * 60 + seconds);
+  // Remove 's' suffix if present
+  timeString = timeString.replace('s', '');
+  return Math.floor(parseFloat(timeString));
 }
 
 /**
@@ -25,8 +25,14 @@ function extractTranscriptSegments(results, baseVideoURL) {
   return results.map((result) => {
     const alternative = result.alternatives[0];
     const transcriptSnippet = alternative.transcript;
-    const startTime = alternative.words[0].startOffset.replace('s', '');
-    const endTime = alternative.words[alternative.words.length - 1].endOffset.replace('s', '');
+    
+    // Get first and last word for timing
+    const firstWord = alternative.words[0];
+    const lastWord = alternative.words[alternative.words.length - 1];
+    
+    // Handle cases where startOffset might not be present in first word
+    const startTime = firstWord.startOffset || firstWord.endOffset;
+    const endTime = lastWord.endOffset;
 
     // Converting start and end times to seconds
     const startTimeInSeconds = convertTimeToSeconds(startTime);

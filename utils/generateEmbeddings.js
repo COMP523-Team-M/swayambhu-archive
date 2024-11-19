@@ -12,9 +12,9 @@ export async function generateEmbedding(text) {
     });
     const embedding = response.data[0].embedding;
 
-    // Checking the dimensions of the generated embedding (must be 768)
-    if (embedding.length !== 768) {
-      throw new Error(`Generated embedding has incorrect dimensions: expected 768, got ${embedding.length}`);
+    // Checking the dimensions of the generated embedding (must be 3072)
+    if (embedding.length !== 3072) {
+      throw new Error(`Generated embedding has incorrect dimensions: expected 3072, got ${embedding.length}`);
     }
 
     console.log('Generated Embedding:', embedding); 
