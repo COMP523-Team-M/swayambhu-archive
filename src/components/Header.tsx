@@ -1,7 +1,12 @@
+import { LoginLink, LogoutLink } from "@kinde-oss/kinde-auth-nextjs/components";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 
-export default function Header() {
+export default async function Header() {
+  const { isAuthenticated } = getKindeServerSession();
+  const isLoggedIn = await isAuthenticated();
+
   return (
     <nav className="flex items-center justify-between border-b-2 p-5">
       <div className="flex items-center gap-x-5">
@@ -20,6 +25,11 @@ export default function Header() {
         <Link href={"/dashboard"} className="hover:text-blue-300">
           Dashboard
         </Link>
+        {isLoggedIn ? (
+          <LogoutLink>Log out</LogoutLink>
+        ) : (
+          <LoginLink>Sign in</LoginLink>
+        )}
       </div>
     </nav>
   );
