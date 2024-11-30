@@ -27,6 +27,7 @@ interface TranscriptJson {
 
 interface VideoData {
   vidID: string;
+  vidTitle: string;
   vidDescription: string;
   uploadDate: string;
   recordDate: string;

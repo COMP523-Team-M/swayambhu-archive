@@ -30,6 +30,7 @@ interface TranscriptJson {
 // Request and response types
 interface UpdateRequestBody {
   vidID: string;
+  vidTitle?: string;
   vidDescription?: string;
   uploadDate?: string;
   recordDate?: string;
@@ -44,6 +45,7 @@ interface UpdateRequestBody {
 
 interface VideoDocument {
   vidID: string;
+  vidTitle: string;
   vidDescription: string;
   uploadDate: string;
   recordDate: string;

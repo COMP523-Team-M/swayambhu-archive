@@ -14,6 +14,7 @@ interface QueryAnalysis {
   filters?: {
     uploadDate?: string;
     location?: string;
+    vidID?: string;
   };
   reasoning: string;
 }
@@ -24,6 +25,7 @@ interface SearchResult {
   filters: {
     uploadDate?: string;
     location?: string;
+    vidID?: string;
   };
   keywords?: string[];
   queryEmbedding?: number[];
@@ -31,8 +33,8 @@ interface SearchResult {
 
 // Constants
 const FILTERABLE_FIELDS: FilterableFields = {
-  video: ['uploadDate', 'location'],
-  snippet: ['uploadDate']  // Snippets don't have location field
+  video: ['uploadDate', 'location', 'vidID'],
+  snippet: ['uploadDate', 'vidID']  // Snippets don't have location field
 };
 
 const openai = new OpenAI({
@@ -58,7 +60,8 @@ export async function analyzeQuery(query: string): Promise<SearchResult> {
       3. Extract only these filters if specifically mentioned:
          - uploadDate: Only if a specific date is mentioned (YYYY-MM-DD format)
          - location: Only if a specific place/location is mentioned
-
+         - vidID: Only if a specific video ID is mentioned
+         
       4. Keywords:
          - Include all important search terms
          - Include topics and categories as keywords, not filters

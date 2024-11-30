@@ -27,6 +27,7 @@ interface TranscriptJson {
 }
 
 interface RequestBody {
+  vidTitle: string;
   vidDescription: string;
   uploadDate: string;
   recordDate: string;
@@ -126,7 +127,7 @@ async function translateText(text: string): Promise<string> {
 export async function POST(request: Request) {
   try {
     const body: RequestBody = await request.json();
-    const { vidDescription, uploadDate, recordDate, location, transcriptJson, tags, baseVideoURL } = body;
+    const { vidTitle, vidDescription, uploadDate, recordDate, location, transcriptJson, tags, baseVideoURL } = body;
 
     if (!transcriptJson || !transcriptJson.results) {
       return Response.json(
@@ -164,6 +165,7 @@ export async function POST(request: Request) {
       id: vidID,
       body: {
         vidID,
+        vidTitle,
         vidDescription,
         uploadDate,
         recordDate,
