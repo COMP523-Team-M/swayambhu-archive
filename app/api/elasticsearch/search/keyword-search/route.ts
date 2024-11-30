@@ -2,22 +2,26 @@ import { NextRequest, NextResponse } from 'next/server';
 import client from '../../../../../utils/elasticsearch';
 
 interface VideoDocument {
+  vidTitle: string;
   vidDescription: string;
   tags: string[];
   location?: string;
   transcript?: string;
   englishTranslation?: string;
+  vidID: string;
 }
 
 interface SnippetDocument {
   transcriptSnippet: string;
   englishTranslation?: string;
+  vidID: string;  // Added this
 }
 
 interface SearchFilters {
   uploadDate?: string;
   location?: string;
   tags?: string[];
+  vidID?: string;  // Added this
 }
 
 interface SearchParams {
@@ -75,7 +79,7 @@ export async function searchVideos({
   from = 0, 
   size = 10 
 }: SearchParams) {
-  const { uploadDate, location, tags } = filters;
+  const { uploadDate, location, tags, vidID } = filters;
   const searchField = determineSearchField(keywords);
   const keywordString = Array.isArray(keywords) ? keywords.join(' ') : keywords;
 
@@ -90,6 +94,9 @@ export async function searchVideos({
   if (tags && tags.length > 0) {
     filterArray.push({ terms: { tags } });
   }
+  if (vidID) {
+    filterArray.push({ term: { vidID } });  // Added this
+  }
 
   const videoSearchQuery: ElasticsearchQuery = {
     index: 'videos',
@@ -100,7 +107,7 @@ export async function searchVideos({
             {
               multi_match: {
                 query: keywordString,
-                fields: ['vidDescription^2', 'tags^1.5', searchField],
+                fields: ['vidTitle^3', 'vidDescription^2', 'tags^1.5', searchField],
                 type: 'best_fields',
                 fuzziness: 'AUTO',
               },
@@ -126,11 +133,18 @@ export async function searchVideos({
 
 export async function searchSnippets({ 
   keywords, 
+  filters = {}, // Added filters parameter
   from = 0, 
   size = 10 
-}: Omit<SearchParams, 'filters'>) {
+}: SearchParams) {
   const searchField = determineSearchField(keywords);
   const keywordString = Array.isArray(keywords) ? keywords.join(' ') : keywords;
+  const { vidID } = filters;  // Added this
+
+  const filterArray: any[] = [];
+  if (vidID) {
+    filterArray.push({ term: { vidID } });  // Added this
+  }
 
   const snippetSearchQuery: ElasticsearchQuery = {
     index: 'video_snippets',
@@ -147,7 +161,7 @@ export async function searchSnippets({
               },
             },
           ],
-          filter: [],
+          filter: filterArray,  // Added this
         },
       },
       from,
@@ -171,6 +185,7 @@ export async function GET(request: NextRequest) {
   const uploadDate = searchParams.get('uploadDate');
   const location = searchParams.get('location');
   const tags = searchParams.get('tags');
+  const vidID = searchParams.get('vidID');
 
   if (!query) {
     return NextResponse.json(
@@ -186,10 +201,12 @@ export async function GET(request: NextRequest) {
     if (uploadDate) filters.uploadDate = uploadDate;
     if (location) filters.location = location;
     if (tags) filters.tags = tags.split(',');
+    if (vidID) filters.vidID = vidID;
 
     const results = type === 'snippet'
       ? await searchSnippets({ 
           keywords, 
+          filters,  // Now passing filters to searchSnippets
           from, 
           size 
         })
