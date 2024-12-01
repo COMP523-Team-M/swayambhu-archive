@@ -17,7 +17,7 @@ export default function UploadItem({ item }: Props) {
   return (
     <div className="mb-2 flex justify-between">
       <p>{item.name}</p>
-      <p className={`text-${status === "Pending" ? "red" : "green"}-500`}>
+      <p className={status === "Pending" ? "text-red-500" : "text-green-500"}>
         {status}
       </p>
     </div>
