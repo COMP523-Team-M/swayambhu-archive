@@ -36,6 +36,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-boilerplate.tsx
+# secret stuff
 cloud-storage-cred.json
 speech-to-text-cred.json
+classwork4*

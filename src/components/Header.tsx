@@ -26,9 +26,9 @@ export default async function Header() {
           Dashboard
         </Link>
         {isLoggedIn ? (
-          <LogoutLink>Log out</LogoutLink>
+          <LogoutLink className="hover:text-blue-300">Log out</LogoutLink>
         ) : (
-          <LoginLink>Sign in</LoginLink>
+          <LoginLink className="hover:text-blue-300">Sign in</LoginLink>
         )}
       </div>
     </nav>
