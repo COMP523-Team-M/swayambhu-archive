@@ -1,8 +1,9 @@
-import React from "react";
+import { Upload } from "@/app/dashboard/page";
 import PlusSign from "./PlusSign";
+import UploadItem from "./UploadItem";
 
 interface Props {
-  uploadList: string[];
+  uploadList: Upload[];
 }
 
 export default function UploadList({ uploadList }: Props) {
@@ -14,12 +15,7 @@ export default function UploadList({ uploadList }: Props) {
           <PlusSign />
         </h2>
         {uploadList.map((entry, index) => {
-          return (
-            <p className="mb-2" key={index}>
-              <span>{entry}</span>
-              <span className="text-green-500">Yeet</span>
-            </p>
-          );
+          return <UploadItem item={entry} key={index} />;
         })}
       </div>
     </>
