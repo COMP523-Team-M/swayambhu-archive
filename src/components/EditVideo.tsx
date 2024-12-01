@@ -46,6 +46,39 @@ export default function EditVideo() {
     e.target.style.height = `${e.target.scrollHeight}px`; // Set to the scrollHeight for auto expansion
   };
 
+  const handleFormsubmit = (data: React.FormEvent<HTMLFormElement>) => {
+    data.preventDefault();
+    const form = new FormData(data.currentTarget);
+
+    const transcription = form.getAll("transcriptUpdates") as string[];
+    const transcriptionUpdates = transcription.map((value, index) => {
+      return {
+        segmentIndex: index,
+        newTranscript: value,
+      };
+    });
+
+    const body = {
+      vidID: id,
+      vidTitle: form.get("vidTitle"),
+      baseVideoURL: form.get("baseVideoURL"),
+      vidDescription: form.get("vidDescription"),
+      uploadDate: form.get("uploadDate"),
+      recordDate: form.get("recordDate"),
+      location: form.get("location"),
+      tags: form.get("tags"),
+      transcriptUpdates: transcriptionUpdates,
+    };
+
+    fetch("http://localhost:3000/api/elasticsearch/CRUD/update-video", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    console.log(body);
+  };
+
   useEffect(() => {
     const textareas = document.querySelectorAll("textarea");
     textareas.forEach((textarea) => {
@@ -57,14 +90,7 @@ export default function EditVideo() {
   return (
     <>
       <h1 className="mb-5 text-3xl font-bold">Edit Video</h1>
-      <form
-        className="w-1/2"
-        onSubmit={(data) => {
-          data.preventDefault();
-          const form = new FormData(data.currentTarget);
-          console.log(form.getAll("yeet"));
-        }}
-      >
+      <form className="w-1/2" onSubmit={handleFormsubmit}>
         <label className="block">Title</label>
         <input
           required
@@ -138,7 +164,7 @@ export default function EditVideo() {
                   handleChange(index, e);
                   handleTextareaResize(e);
                 }}
-                name="yeet"
+                name="transcriptUpdates"
               />
             </div>
           );

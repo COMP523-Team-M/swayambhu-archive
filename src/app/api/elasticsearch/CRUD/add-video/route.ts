@@ -1,7 +1,6 @@
 import client from "@/utils-ts/elasticsearch";
 import { v4 as uuidv4 } from "uuid";
 import { generateEmbedding } from "@/utils-ts/generateEmbeddings";
-import { NextRequest } from "next/server";
 import speech from "@google-cloud/speech";
 import { Storage } from "@google-cloud/storage";
 
@@ -30,6 +29,7 @@ interface TranscriptJson {
 }
 
 interface RequestBody {
+  vidTitle: string;
   vidDescription: string;
   uploadDate: string;
   recordDate: string;
@@ -207,7 +207,7 @@ async function translateText(text: string): Promise<string> {
   return data.data.translations[0].translatedText;
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
     const form = await request.formData();
 
@@ -215,17 +215,18 @@ export async function POST(request: NextRequest) {
     const tempArr = temp.replace(/\s+/g, "").split(",");
 
     const body: RequestBody = {
+      vidTitle: form.get("vidTitle")!.toString(),
       vidDescription: form.get("vidDescription")!.toString(),
       uploadDate: form.get("uploadDate")!.toString(),
       recordDate: form.get("recordDate")!.toString(),
       location: form.get("location")!.toString(),
-      // transcriptJson: "yeet" as unknown as TranscriptJson,
       transcriptJson: await transcribeAudio(form.get("audio") as File),
       tags: tempArr,
       baseVideoURL: form.get("baseVideoURL")!.toString(),
     };
 
     const {
+      vidTitle,
       vidDescription,
       uploadDate,
       recordDate,
@@ -277,6 +278,7 @@ export async function POST(request: NextRequest) {
       id: vidID,
       body: {
         vidID,
+        vidTitle,
         vidDescription,
         uploadDate,
         recordDate,
