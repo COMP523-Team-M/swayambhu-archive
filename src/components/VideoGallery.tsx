@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BsPencilFill } from "react-icons/bs";
 import { FaTrashAlt } from "react-icons/fa";
+import Image from "next/image";
 
 const videoData = [
   {
@@ -69,14 +70,21 @@ const VideoGallery: React.FC = () => {
         {videoData.map((video) => (
           <div key={video.id} className="mb-5 flex border-b-2">
             <div className="mr-5 pb-5">
-              <iframe
+              <Image
+                src={`https://img.youtube.com/vi/${video.url.split("embed/")[1]}/0.jpg`}
+                alt={"A video"}
+                width={240}
+                height={135}
+                className="rounded-lg"
+              ></Image>
+              {/* <iframe
                 width="240"
                 height="135"
                 src={video.url}
                 frameBorder="0"
                 allowFullScreen
                 title={video.title}
-              ></iframe>
+              ></iframe> */}
             </div>
             <div className="flex w-80 flex-col">
               <Link
