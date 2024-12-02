@@ -1,17 +1,29 @@
 "use client";
 
+import { useUploadContext } from "@/context";
 import { useRouter } from "next/navigation";
 
 export default function UploadForm() {
   const router = useRouter();
 
+  const { addUpload, updateStatus } = useUploadContext();
+
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    fetch("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
-      method: "POST",
-      body: formData,
-    });
+    const title = formData.get("vidTitle") as string;
+
+    addUpload({ title, status: "Pending" });
+
+    // fetch("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
+    //   method: "POST",
+    //   body: formData,
+    // }).then(() => updateStatus(title, "Done"));
+
+    new Promise((resolve) => setTimeout(() => resolve("wow"), 5000)).then(() =>
+      updateStatus(title, "Done"),
+    );
+
     router.push("/dashboard");
   };
 

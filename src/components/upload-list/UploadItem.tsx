@@ -4,19 +4,14 @@ import { Upload } from "@/app/dashboard/page";
 import React, { useEffect, useState } from "react";
 
 interface Props {
-  item: Upload;
+  title: string;
+  status: "Pending" | "Done";
 }
 
-export default function UploadItem({ item }: Props) {
-  const [status, setStatus] = useState("Pending");
-
-  useEffect(() => {
-    item.upload.then(() => setStatus("Done"));
-  }, [item]);
-
+export default function UploadItem({ title, status }: Props) {
   return (
     <div className="mb-2 flex justify-between">
-      <p>{item.name}</p>
+      <p>{title}</p>
       <p className={status === "Pending" ? "text-red-500" : "text-green-500"}>
         {status}
       </p>
