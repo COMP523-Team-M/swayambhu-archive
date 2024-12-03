@@ -80,6 +80,7 @@ export async function searchVideos({
   const { uploadDate, location, tags } = filters;
   const searchField = determineSearchField(keywords);
   const keywordString = Array.isArray(keywords) ? keywords.join(" ") : keywords;
+  console.log(`keywordString ->:`, keywordString)
 
   const filterArray: any[] = [];
 
@@ -193,6 +194,7 @@ export async function GET(request: NextRequest) {
       .toLowerCase()
       .split(" ")
       .filter((word) => word.length > 2);
+    console.log(`keywords ->:`, keywords);
 
     const filters: SearchFilters = {};
     if (uploadDate) filters.uploadDate = uploadDate;

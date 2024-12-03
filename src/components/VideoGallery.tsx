@@ -1,43 +1,24 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import SearchBar from "./SearchBar";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { BsPencilFill } from "react-icons/bs";
 import { FaTrashAlt } from "react-icons/fa";
 import Image from "next/image";
-
-const videoData = [
-  {
-    id: 1,
-    title: "UNC Computer Science",
-    url: "https://www.youtube.com/embed/HLn_jmDoOpw",
-  },
-  {
-    id: 2,
-    title: "Duke Computer Science",
-    url: "https://www.youtube.com/embed/vQsYzrp2tZY",
-  },
-  {
-    id: 3,
-    title: "NC State Computer Science",
-    url: "https://www.youtube.com/embed/LRoI-Rw4GBY",
-  },
-];
+import useReactive from "@/hooks/useReactive";
 
 const VideoGallery: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState(""); // Store the search query
   const router = useRouter(); // Initialize the router for navigation
 
-  const handleSearch = (query: string) => {
-    console.log("Search Query (From SearchBar):", query); // Debugging log
-    setSearchQuery(query); // Update the search query
-  };
-
   const handleButtonClick = () => {
-    if (searchQuery.trim()) {
-      const destination = `/searchResults?query=${encodeURIComponent(searchQuery)}`;
+    if (state.searchQuery.trim()) {
+      const destination = `/searchResults?query=${encodeURIComponent(
+        state.searchQuery,
+      )}`;
       console.log("Navigating to:", destination); // Debugging log
       router.push(destination); // Navigate programmatically
     } else {
@@ -45,53 +26,87 @@ const VideoGallery: React.FC = () => {
     }
   };
 
+  const state: any = useReactive({
+    searchQuery: "",
+    list: [],
+    loading: false,
+  });
+
+  const getList = async () => {
+    state.loading = true;
+    const res = await fetch(`/api/elasticsearch/CRUD/get-all-videos`);
+    const data = await res.json();
+    state.list = data?.results || [];
+    state.loading = false;
+  };
+
+  useEffect(() => {
+    getList();
+  }, []);
+
+  if (state.loading) {
+    return (
+      <div className="mx-10">
+        <h1 className="mb-4 text-center text-2xl font-bold">Loading...</h1>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-10">
       <h1 className="mb-4 text-center text-2xl font-bold">Video Gallery</h1>
 
-      {/* Search Bar */}
-      <SearchBar onSearch={handleSearch} />
-
-      {/* Redirect to Search Results */}
-      <button
-        onClick={handleButtonClick}
-        className={`mt-6 rounded px-4 py-2 ${
-          searchQuery.trim()
-            ? "bg-blue-600 text-white hover:bg-blue-700"
-            : "cursor-not-allowed bg-gray-400 text-gray-600"
-        }`}
-        disabled={!searchQuery.trim()} // Disable button if query is empty
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
       >
-        View Search Results
-      </button>
+        {/* Search Bar */}
+        <SearchBar
+          onSearch={(query: string) => {
+            state.searchQuery = query;
+          }}
+        />
+
+        {/* Redirect to Search Results */}
+        <button
+          onClick={handleButtonClick}
+          className={`mt-6 rounded px-4 py-2 ${
+            state.searchQuery.trim()
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "cursor-not-allowed bg-gray-400 text-gray-600"
+          }`}
+          disabled={!state.searchQuery.trim()} // Disable button if query is empty
+        >
+          View Search Results
+        </button>
+      </div>
+
+      <br />
 
       {/* Display Video Gallery */}
       <div className="flex flex-col items-center">
-        {videoData.map((video) => (
-          <div key={video.id} className="mb-5 flex border-b-2">
+        {state.list.map((video: any) => (
+          <div key={video.vidID} className="mb-5 flex border-b-2">
             <div className="mr-5 pb-5">
               <Image
-                src={`https://img.youtube.com/vi/${video.url.split("embed/")[1]}/0.jpg`}
-                alt={"A video"}
+                src={`https://img.youtube.com/vi/${video.baseVideoURL.split("=")[1]}/0.jpg`}
+                alt="A video"
                 width={240}
                 height={135}
                 className="rounded-lg"
-              ></Image>
-              {/* <iframe
-                width="240"
-                height="135"
-                src={video.url}
-                frameBorder="0"
-                allowFullScreen
-                title={video.title}
-              ></iframe> */}
+                priority={false}
+                unoptimized
+              />
             </div>
             <div className="flex w-80 flex-col">
               <Link
-                href={`/video/${video.id}`}
+                href={`/video/${video.vidID}`}
                 className="cursor-pointer text-xl text-blue-600 hover:underline"
               >
-                {video.title}
+                {video.vidDescription}
               </Link>
               <p>Description</p>
               <p>More Information</p>
