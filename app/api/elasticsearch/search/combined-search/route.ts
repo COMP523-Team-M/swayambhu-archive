@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
-import client from '../../../../../utils/elasticsearch';
-import { generateEmbedding } from '../../../../../utils/generateEmbeddings';
+import client from '../../../../../utils-ts/elasticsearch';
+import { generateEmbedding } from '../../../../../utils-ts/generateEmbeddings';
 
 interface SearchFilters {
   uploadDate?: string;

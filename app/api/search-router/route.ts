@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { analyzeQuery } from '../../../utils/analyzeQuery-v2';
+import { analyzeQuery } from '../../../utils-ts/analyzeQuery';
 import { searchVideos, searchSnippets } from '../elasticsearch/search/keyword-search/route';
 import { semanticSearchVideos, semanticSearchSnippets } from '../elasticsearch/search/semantic-search/route';
 import { combinedSearch } from '../elasticsearch/search/combined-search/route';
-import client from '../../../utils/elasticsearch';
+import client from '../../../utils-ts/elasticsearch';
 
 // Base interface for shared properties
 interface BaseDocument {

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import client from '../../../../../utils/elasticsearch';
+import client from '../../../../../utils-ts/elasticsearch';
 
 interface VideoDocument {
   vidTitle: string;
