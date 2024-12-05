@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@elastic/elasticsearch": "^8.15.2",
+    "@elastic/elasticsearch": "^8.15.1",
     "@google-cloud/speech": "^6.7.0",
     "@google-cloud/storage": "^7.14.0",
     "@google-cloud/translate": "^8.5.0",
