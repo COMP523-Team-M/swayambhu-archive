@@ -1,6 +1,6 @@
 "use client";
 
-import { useUploadContext } from "@/context";
+import { useUploadContext } from "@/context/Uploads";
 import { useRouter } from "next/navigation";
 
 export default function UploadForm() {
@@ -29,8 +29,8 @@ export default function UploadForm() {
 
   return (
     <>
-      <h1 className="mb-5 text-3xl font-bold">Upload Video</h1>
-      <form className="w-1/2" onSubmit={handleSubmit}>
+      <h1 className="mb-5 text-3xl font-semibold">Upload Video</h1>
+      <form className="w-1/2 text-slate-700" onSubmit={handleSubmit}>
         <label className="block">Title</label>
         <input
           required
@@ -84,7 +84,7 @@ export default function UploadForm() {
 
         <label className="block">Tags (Comma separated list)</label>
         <input
-          placeholder="Comma separated list (temple, tourist, monk)"
+          placeholder="temple, tourist, monk"
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
           type="text"
           name="tags"

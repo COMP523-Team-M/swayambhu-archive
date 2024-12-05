@@ -9,7 +9,7 @@ export default function PlusSign() {
 
   return (
     <FaPlus
-      className="self-center text-sm hover:cursor-pointer hover:text-blue-500"
+      className="self-center text-sm hover:cursor-pointer hover:text-sky-500"
       onClick={() => router.push("/dashboard/upload")}
     />
   );

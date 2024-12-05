@@ -30,7 +30,7 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addUpload = (upload: Upload) => {
-    setUploads((prev) => [...prev, upload]);
+    setUploads((prev) => [upload, ...prev]);
   };
 
   const updateStatus = (title: string, status: "Pending" | "Done") => {

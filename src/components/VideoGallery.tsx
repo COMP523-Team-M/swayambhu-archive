@@ -47,7 +47,7 @@ const VideoGallery: React.FC = () => {
 
   return (
     <div className="mx-10">
-      <h1 className="mb-4 text-center text-2xl font-bold">Video Gallery</h1>
+      <h1 className="mb-4 text-center text-2xl font-semibold">Video Gallery</h1>
 
       {/* Search Bar */}
       <SearchBar onSearch={handleSearch} />
@@ -68,7 +68,7 @@ const VideoGallery: React.FC = () => {
       {/* Display Video Gallery */}
       <div className="flex flex-col items-center">
         {videoData.map((video) => (
-          <div key={video.id} className="mb-5 flex border-b-2">
+          <div key={video.id} className="mb-5 flex border-b-2 last:border-b-0">
             <div className="mr-5 pb-5">
               <Image
                 src={`https://img.youtube.com/vi/${video.url.split("embed/")[1]}/0.jpg`}
@@ -89,12 +89,12 @@ const VideoGallery: React.FC = () => {
             <div className="flex w-80 flex-col">
               <Link
                 href={`/video/${video.id}`}
-                className="cursor-pointer text-xl text-blue-600 hover:underline"
+                className="cursor-pointer text-xl text-sky-500 hover:underline"
               >
                 {video.title}
               </Link>
-              <p>Description</p>
-              <p>More Information</p>
+              <p className="text-slate-700">Description</p>
+              <p className="text-slate-700">More Information</p>
               <div className="mb-5 mt-auto self-end">
                 <BsPencilFill className="mr-2 inline cursor-pointer hover:text-blue-500"></BsPencilFill>
                 <FaTrashAlt className="inline cursor-pointer hover:text-blue-500"></FaTrashAlt>
