@@ -16,25 +16,19 @@ interface VideoPageProps {
 }
 
 function convertTimeStrWithMilliseconds(timeStr: string) {
-  // 提取出数字部分（去除单位's'）
   const num = Number(timeStr.replace(/s/g, ""));
-  // 计算小时、分钟、秒、毫秒
   const hours = Math.floor(num / 3600);
   const remainingSeconds = num % 3600;
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = Math.floor(remainingSeconds % 60);
-  // const milliseconds = Math.round((remainingSeconds % 1) * 1000);
-  // 将计算出的时间部分格式化为两位数（小时、分钟、秒）或三位数（毫秒）的字符串，不足位的在前面补0
   const hoursStr = hours.toString().padStart(2, "0");
   const minutesStr = minutes.toString().padStart(2, "0");
   const secondsStr = seconds.toString().padStart(2, "0");
-  // const millisecondsStr = milliseconds.toString().padStart(3, "0");
   return `${hoursStr}:${minutesStr}:${secondsStr}`;
 }
 
 const dataHandler = (data: any) => {
   const newData: any[] = [];
-
   data.englishTranscriptJson.results.forEach((it: any, index: number) => {
     const feature = {
       eText: "",
@@ -42,17 +36,13 @@ const dataHandler = (data: any) => {
       time: "",
       showTime: "",
     };
-
     feature.eText = it.alternatives[0].transcript;
     const timeStr =
       it.alternatives[0].words[0].startOffset ||
       it.alternatives[0].words[1].startOffset;
 
     feature.time = timeStr.replace(/s/g, "");
-
-    // 转换为 00：00：00 格式
     feature.showTime = convertTimeStrWithMilliseconds(feature.time);
-
     feature.aText =
       data.transcriptJson.results[index].alternatives[0].transcript;
 
@@ -69,9 +59,17 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const state: any = useReactive({
     loading: false,
     selectedVideo: null,
-
     transcript: [],
   });
+
+  const [player, setPlayer] = useState<any>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
+  const transcriptRefs = useRef<HTMLDivElement[]>([]);
+  const transcriptContainerRef = useRef<HTMLDivElement>(null);
 
   const getList = async () => {
     const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
@@ -79,6 +77,28 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     state.selectedVideo = data || null;
     state.transcript = dataHandler(state.selectedVideo);
     state.loading = true;
+
+    const videoId = state.selectedVideo?.baseVideoURL.split("=")[1];
+    console.log(`videoId ->:`, videoId);
+
+    // Initialize YouTube API
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.className = "iframe_api";
+    script.async = true;
+    document.body.appendChild(script);
+
+    (window as any).onYouTubeIframeAPIReady = () => {
+      new (window as any).YT.Player("youtube-player", {
+        videoId,
+        events: {
+          onReady: (event: any) => {
+            console.log(`event ->:`, event);
+            setPlayer(event.target);
+          },
+        },
+      });
+    };
   };
 
   useEffect(() => {
@@ -95,48 +115,9 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     };
   }, []);
 
-  const [player, setPlayer] = useState<any>(null);
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [activeIndex, setActiveIndex] = useState<number>(-1);
-  const [searchTerm, setSearchTerm] = useState<string>("");
-
-  const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
-  const transcriptRefs = useRef<HTMLDivElement[]>([]);
-  const transcriptContainerRef = useRef<HTMLDivElement>(null);
-
   useEffect(() => {
-    if (!state.selectedVideo) return;
-    // Load YouTube API script
-    const script = document.createElement("script");
-    script.src = "https://www.youtube.com/iframe_api";
-    script.className = "iframe_api";
-    script.async = true;
-    document.body.appendChild(script);
+    if (!player || !state.loading) return;
 
-    const videoId = state.selectedVideo?.baseVideoURL.split("=")[1];
-    console.log(`videoId ->:`, videoId);
-    (window as any).onYouTubeIframeAPIReady = null;
-    (window as any).YT = null;
-
-    // Initialize YouTube player
-    (window as any).onYouTubeIframeAPIReady = () => {
-      new (window as any).YT.Player("youtube-player", {
-        videoId,
-        events: {
-          onReady: (event: any) => {
-            console.log(`event ->:`, event);
-            setPlayer(event.target);
-          },
-        },
-      });
-    };
-  }, [state.selectedVideo]);
-
-  useEffect(() => {
-    if (!player) return;
-    if (!state.loading) return;
-
-    // Update current time periodically
     const interval = setInterval(() => {
       const time = player.getCurrentTime();
       setCurrentTime(time);
@@ -148,7 +129,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   useEffect(() => {
     if (!state.loading) return;
 
-    // Find the active transcript index
     const activeIdx = state.transcript.findIndex(
       (entry: any, i: number) =>
         entry.time <= currentTime &&
@@ -175,7 +155,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   }, [currentTime, activeIndex, state.loading]);
 
   const handleTranscriptClick = (time: string) => {
-    // const seconds = convertTimeToSeconds(time);
     const seconds = Number(time);
     console.log(`seconds ->:`, seconds);
     player?.seekTo(seconds, true);
@@ -223,7 +202,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
           </Link>
         </h2>
 
-        {/* Search bar with Clear Filter and Jump to Next Match buttons */}
         <div className="mb-1 flex gap-2">
           <input
             type="text"
