@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -6,6 +7,7 @@ import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import styles from "./VideoPage.module.css";
 import { VideoData } from "./VideoData"; // Assuming videoData is stored in a separate file
+import useReactive from "@/hooks/useReactive";
 
 interface VideoPageProps {
   params: {
@@ -13,16 +15,82 @@ interface VideoPageProps {
   };
 }
 
+function convertTimeStrWithMilliseconds(timeStr: string) {
+  // 提取出数字部分（去除单位's'）
+  const num = Number(timeStr.replace(/s/g, ""));
+  // 计算小时、分钟、秒、毫秒
+  const hours = Math.floor(num / 3600);
+  const remainingSeconds = num % 3600;
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = Math.floor(remainingSeconds % 60);
+  const milliseconds = Math.round((remainingSeconds % 1) * 1000);
+  // 将计算出的时间部分格式化为两位数（小时、分钟、秒）或三位数（毫秒）的字符串，不足位的在前面补0
+  const hoursStr = hours.toString().padStart(2, "0");
+  const minutesStr = minutes.toString().padStart(2, "0");
+  const secondsStr = seconds.toString().padStart(2, "0");
+  const millisecondsStr = milliseconds.toString().padStart(3, "0");
+  return `${hoursStr}:${minutesStr}:${secondsStr}.${millisecondsStr}`;
+}
+
+const dataHandler = (data: any) => {
+  const newData: any[] = [];
+
+  data.englishTranscriptJson.results.forEach((it: any, index: number) => {
+    const feature = {
+      eText: "",
+      aText: "",
+      time: "",
+      showTime: "",
+    };
+
+    feature.eText = it.alternatives[0].transcript;
+    const timeStr =
+      it.alternatives[0].words[0].startOffset ||
+      it.alternatives[0].words[1].startOffset;
+
+    feature.time = timeStr.replace(/s/g, "");
+
+    // 转换为 00：00：00 格式
+    feature.showTime = convertTimeStrWithMilliseconds(feature.time);
+
+    feature.aText =
+      data.transcriptJson.results[index].alternatives[0].transcript;
+
+    newData.push(feature);
+  });
+  console.log(`newData ->:`, newData);
+
+  return newData;
+};
+
 const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const { id } = params;
-  const selectedVideo: any = VideoData[id] || VideoData["1"];
+
+  const state: any = useReactive({
+    loading: false,
+    selectedVideo: null,
+
+    transcript: [],
+  });
+
+  const getList = async () => {
+    const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
+    const data = await res.json();
+    state.selectedVideo = data || [];
+    state.loading = true;
+
+    state.transcript = dataHandler(state.selectedVideo);
+  };
+
+  useEffect(() => {
+    getList();
+  }, []);
+
   const [player, setPlayer] = useState<any>(null);
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredTranscript, setFilteredTranscript] = useState(
-    selectedVideo.transcript,
-  );
+
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
   const transcriptRefs = useRef<HTMLDivElement[]>([]);
   const transcriptContainerRef = useRef<HTMLDivElement>(null);
@@ -35,6 +103,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   };
 
   useEffect(() => {
+    if (!state.loading) return;
     // Load YouTube API script
     const script = document.createElement("script");
     script.src = "https://www.youtube.com/iframe_api";
@@ -43,8 +112,8 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
     // Initialize YouTube player
     (window as any).onYouTubeIframeAPIReady = () => {
-      const ytPlayer = new (window as any).YT.Player("youtube-player", {
-        videoId: selectedVideo.videoUrl.split("embed/")[1],
+      new (window as any).YT.Player("youtube-player", {
+        videoId: state.selectedVideo?.baseVideoURL.split("=")[1],
         events: {
           onReady: (event: any) => setPlayer(event.target),
         },
@@ -54,7 +123,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     return () => {
       if (player) player.destroy();
     };
-  }, []);
+  }, [state.loading]);
 
   useEffect(() => {
     if (!player) return;
@@ -70,12 +139,11 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
   useEffect(() => {
     // Find the active transcript index
-    const activeIdx = selectedVideo.transcript.findIndex(
+    const activeIdx = state.transcript.findIndex(
       (entry: any, i: number) =>
-        convertTimeToSeconds(entry.time) <= currentTime &&
-        (i === selectedVideo.transcript.length - 1 ||
-          convertTimeToSeconds(selectedVideo.transcript[i + 1].time) >
-            currentTime),
+        entry.time <= currentTime &&
+        (i === state.transcript.length - 1 ||
+          state.transcript[i + 1].time > currentTime),
     );
 
     setActiveIndex(activeIdx);
@@ -87,7 +155,9 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
       if (wordContainer) {
         wordContainer.scrollTo({
-          top: transcriptRefs.current[activeIdx].offsetTop - wordContainer.offsetTop,
+          top:
+            transcriptRefs.current[activeIdx].offsetTop -
+            wordContainer.offsetTop,
           behavior: "smooth",
         });
       }
@@ -95,16 +165,19 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   }, [currentTime, activeIndex]);
 
   const handleTranscriptClick = (time: string) => {
-    const seconds = convertTimeToSeconds(time);
+    // const seconds = convertTimeToSeconds(time);
+    const seconds = Number(time);
     player.seekTo(seconds, true);
   };
 
   const jumpToNextMatch = () => {
     if (searchTerm.trim() !== "") {
-      const filtered = selectedVideo.transcript.filter((entry: any) =>
-        entry.text.toLowerCase().includes(searchTerm.toLowerCase()),
+      const filtered = state.transcript.filter(
+        (entry: any) =>
+          entry.eText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          entry.aText.toLowerCase().includes(searchTerm.toLowerCase()),
       );
-      setFilteredTranscript(filtered);
+      state.transcript = filtered;
 
       if (filtered.length > 0) {
         const nextIndex =
@@ -119,7 +192,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
   const handleClearFilter = () => {
     setSearchTerm("");
-    setFilteredTranscript(selectedVideo.transcript);
+    state.transcript = dataHandler(state.selectedVideo);
     setCurrentMatchIndex(-1);
   };
 
@@ -167,7 +240,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
           ref={transcriptContainerRef}
           id="wordContainer"
         >
-          {filteredTranscript.map((entry: any, index: number) => (
+          {state.transcript.map((entry: any, index: number) => (
             <div
               key={index}
               className={`cursor-pointer border-b pb-2 ${
@@ -176,8 +249,13 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
               ref={(el: any) => (transcriptRefs.current[index] = el)}
               onClick={() => handleTranscriptClick(entry.time)}
             >
-              <p className="text-sm text-blue-400">{entry.time}</p>
-              <p className="text-white">{entry.text}</p>
+              <p className="text-sm text-blue-400">{entry.showTime}</p>
+              <p className={`${index === activeIndex ? "text-white" : ""}`}>
+                {entry.eText}
+              </p>
+              <p className={`${index === activeIndex ? "text-white" : ""}`}>
+                {entry.aText}
+              </p>
             </div>
           ))}
         </div>

@@ -7,58 +7,11 @@ import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { VideoData } from "@/app/video/[id]/VideoData";
 import useReactive from "@/hooks/useReactive";
+import Image from "next/image";
 
 export default function SearchResultPage() {
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get("query");
-  const lowerCasedSearchTerm = searchTerm?.toLowerCase();
-
-  // Filter videos based on matching transcript entries
-  const searchResults = lowerCasedSearchTerm
-    ? Object.entries(VideoData)
-        .map(([id, video]) => {
-          // Check if the video has a transcript and find matches
-          const matchingSnippets =
-            video.transcript?.flatMap((entry) => {
-              const startIndex = entry.text
-                .toLowerCase()
-                .indexOf(lowerCasedSearchTerm);
-              if (startIndex !== -1) {
-                // Extract a segment of the text containing the search term
-                const snippetStart = Math.max(startIndex - 30, 0); // 30 chars before the match
-                const snippetEnd = Math.min(
-                  startIndex + 30 + searchTerm.length,
-                  entry.text.length,
-                ); // 30 chars after the match
-                const snippet = entry.text
-                  .slice(snippetStart, snippetEnd)
-                  .trim();
-
-                // Highlight the search term
-                const highlightedSnippet = snippet.replace(
-                  new RegExp(`(${searchTerm})`, "ig"),
-                  (match) => `<mark>${match}</mark>`,
-                );
-
-                return {
-                  time: entry.time,
-                  text: highlightedSnippet,
-                };
-              }
-              return [];
-            }) || [];
-
-          // If matches exist, include them in the results
-          if (matchingSnippets.length > 0) {
-            return { id, video, matchingSnippets };
-          }
-          return null;
-        })
-        .filter(Boolean) // Remove null results
-    : [];
-
-  // Debugging: Log the search results
-  console.log("Filtered Search Results:", searchResults);
 
   const state: any = useReactive({
     searchResults: [],
@@ -94,32 +47,51 @@ export default function SearchResultPage() {
 
       <h1 className="mb-6 text-center text-2xl font-bold">Search Results</h1>
 
-      {searchResults.length > 0 ? (
-        searchResults.map(({ id, video, matchingSnippets }: any) => (
-          <div key={id} className="mb-6 rounded-lg border p-4">
-            <Link href={`/video/${id}`}>
-              <h2 className="text-xl font-semibold text-blue-600 hover:underline">
-                {video.title || `Video ${id}`}
-              </h2>
-            </Link>
-            <div className="mt-2 text-gray-700">
-              <strong>Matching Transcript Snippets:</strong>
-              <ul className="ml-4 list-disc">
-                {matchingSnippets.map((snippet: any, index: number) => (
-                  <li key={index}>
-                    <span className="text-sm text-gray-600">
-                      [{snippet.time}]
-                    </span>{" "}
-                    <span
-                      className="text-gray-800"
-                      dangerouslySetInnerHTML={{ __html: snippet.text }}
-                    ></span>
-                  </li>
-                ))}
-              </ul>
+      {state.searchResults.length > 0 ? (
+        state.searchResults.map(
+          ({ baseVideoURL, vidID, vidDescription }: any) => (
+            <div key={vidID} className="mb-6 flex rounded-lg border p-4">
+              <div>
+                <Image
+                  src={`https://img.youtube.com/vi/${baseVideoURL.split("=")[1]}/0.jpg`}
+                  alt="A video"
+                  width={240}
+                  height={135}
+                  className="rounded-lg"
+                  priority={false}
+                  unoptimized
+                />
+              </div>
+              <div key={vidID} className="mb-6 rounded-lg p-4">
+                <Link href={`/video/${vidID}`}>
+                  <h2 className="text-xl font-semibold text-blue-600 hover:underline">
+                    {vidDescription || `Video ${vidID}`}
+                  </h2>
+                </Link>
+                <div className="mt-2 text-gray-700">
+                  <p>Description: {vidDescription}</p>
+
+                  {/* <strong>Matching Transcript Snippets:</strong>
+                <ul className="ml-4 list-disc">
+                  {(matchingSnippets || []).map(
+                    (snippet: any, index: number) => (
+                      <li key={index}>
+                        <span className="text-sm text-gray-600">
+                          [{snippet.time}]
+                        </span>{" "}
+                        <span
+                          className="text-gray-800"
+                          dangerouslySetInnerHTML={{ __html: snippet.text }}
+                        ></span>
+                      </li>
+                    ),
+                  )}
+                </ul> */}
+                </div>
+              </div>
             </div>
-          </div>
-        ))
+          ),
+        )
       ) : (
         <p className="text-center text-gray-500">No results found.</p>
       )}

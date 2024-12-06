@@ -108,12 +108,14 @@ const VideoGallery: React.FC = () => {
               >
                 {video.vidDescription}
               </Link>
-              <p>Description</p>
-              <p>More Information</p>
-              <div className="mb-5 mt-auto self-end">
-                <BsPencilFill className="mr-2 inline cursor-pointer hover:text-blue-500"></BsPencilFill>
-                <FaTrashAlt className="inline cursor-pointer hover:text-blue-500"></FaTrashAlt>
-              </div>
+
+              <p>Description: {video.vidDescription}</p>
+              <p>More Information: {video.vidMoreInfo}</p>
+
+              {/* <div className="mb-5 mt-auto self-end">
+                <BsPencilFill className="mr-2 inline cursor-pointer hover:text-blue-500" />
+                <FaTrashAlt className="inline cursor-pointer hover:text-blue-500" />
+              </div> */}
             </div>
           </div>
         ))}
