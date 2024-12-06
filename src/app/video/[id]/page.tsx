@@ -88,10 +88,13 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     state.transcript = dataHandler(state.selectedVideo);
     state.loading = true;
 
+    const videoId = state.selectedVideo?.baseVideoURL.split("=")[1];
+    console.log(`videoId ->:`, videoId);
+
     // Initialize YouTube player
     (window as any).onYouTubeIframeAPIReady = () => {
       new (window as any).YT.Player("youtube-player", {
-        videoId: state.selectedVideo?.baseVideoURL.split("=")[1],
+        videoId,
         events: {
           onReady: (event: any) => setPlayer(event.target),
         },
@@ -123,10 +126,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
       ? parts[0] * 3600 + parts[1] * 60 + parts[2]
       : parts[0] * 60 + parts[1];
   };
-
-  useEffect(() => {
-    if (!state.loading) return;
-  }, [state.loading]);
 
   useEffect(() => {
     if (!player) return;
