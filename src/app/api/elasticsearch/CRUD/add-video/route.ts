@@ -34,9 +34,15 @@ interface RequestBody {
   uploadDate: string;
   recordDate: string;
   location: string;
-  transcriptJson: TranscriptJson;
+  audio: Audio;
   tags: string[];
   baseVideoURL: string;
+}
+
+interface Audio {
+  name: string;
+  type: string;
+  content: string;
 }
 
 interface TranscriptSegment {
@@ -102,27 +108,24 @@ function extractTranscriptSegments(
 /**
  * Transcribes a given text using Google Cloud Speech-to-Text API.
  */
-async function transcribeAudio(file: File) {
+async function transcribeAudio(file: Buffer, name: string) {
   process.env.GOOGLE_APPLICATION_CREDENTIALS =
     "classwork4-439721-7209a5dbe146.json";
 
   if (!file) throw new Error("No file provided");
-  if (file.size < 1) throw new Error("File is empty");
-
-  const buffer = await file.arrayBuffer();
 
   const storage = new Storage();
   await storage
     .bucket("test-speech123")
-    .file("audio-files/" + file.name)
-    .save(Buffer.from(buffer));
+    .file("audio-files/" + name)
+    .save(file);
 
   // Instantiates a client
   const client = new speech.v2.SpeechClient({
     apiEndpoint: "us-central1-speech.googleapis.com",
   });
 
-  const audioPath = `gs://test-speech123/audio-files/${file.name}`;
+  const audioPath = `gs://test-speech123/audio-files/${name}`;
 
   const workspace = "gs://test-speech123/transcripts";
 
@@ -170,7 +173,7 @@ async function transcribeAudio(file: File) {
 
   const [fileContent] = await transcriptFile.download();
 
-  const transcriptJson = JSON.parse(fileContent.toString());
+  const transcriptJson: TranscriptJson = JSON.parse(fileContent.toString());
 
   console.log("Transcription result:", transcriptJson);
 
@@ -209,32 +212,27 @@ async function translateText(text: string): Promise<string> {
 
 export async function POST(request: Request) {
   try {
-    const form = await request.formData();
-
-    const temp = form.get("tags") as string;
-    const tempArr = temp.replace(/\s+/g, "").split(",");
-
-    const body: RequestBody = {
-      vidTitle: form.get("vidTitle")!.toString(),
-      vidDescription: form.get("vidDescription")!.toString(),
-      uploadDate: form.get("uploadDate")!.toString(),
-      recordDate: form.get("recordDate")!.toString(),
-      location: form.get("location")!.toString(),
-      transcriptJson: await transcribeAudio(form.get("audio") as File),
-      tags: tempArr,
-      baseVideoURL: form.get("baseVideoURL")!.toString(),
-    };
-
+    const body: RequestBody = await request.json();
     const {
       vidTitle,
       vidDescription,
       uploadDate,
       recordDate,
       location,
-      transcriptJson,
+      audio,
       tags,
       baseVideoURL,
     } = body;
+
+    if (!audio) {
+      return Response.json(
+        { message: "Invalid transcript JSON format" },
+        { status: 400 },
+      );
+    }
+
+    const fileBuffer = Buffer.from(audio.content, "base64");
+    const transcriptJson = await transcribeAudio(fileBuffer, audio.name);
 
     if (!transcriptJson || !transcriptJson.results) {
       return Response.json(
