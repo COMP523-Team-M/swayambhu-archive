@@ -23,13 +23,13 @@ function convertTimeStrWithMilliseconds(timeStr: string) {
   const remainingSeconds = num % 3600;
   const minutes = Math.floor(remainingSeconds / 60);
   const seconds = Math.floor(remainingSeconds % 60);
-  const milliseconds = Math.round((remainingSeconds % 1) * 1000);
+  // const milliseconds = Math.round((remainingSeconds % 1) * 1000);
   // 将计算出的时间部分格式化为两位数（小时、分钟、秒）或三位数（毫秒）的字符串，不足位的在前面补0
   const hoursStr = hours.toString().padStart(2, "0");
   const minutesStr = minutes.toString().padStart(2, "0");
   const secondsStr = seconds.toString().padStart(2, "0");
-  const millisecondsStr = milliseconds.toString().padStart(3, "0");
-  return `${hoursStr}:${minutesStr}:${secondsStr}.${millisecondsStr}`;
+  // const millisecondsStr = milliseconds.toString().padStart(3, "0");
+  return `${hoursStr}:${minutesStr}:${secondsStr}`;
 }
 
 const dataHandler = (data: any) => {
@@ -76,10 +76,9 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const getList = async () => {
     const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
     const data = await res.json();
-    state.selectedVideo = data || [];
-    state.loading = true;
-
+    state.selectedVideo = data || {};
     state.transcript = dataHandler(state.selectedVideo);
+    state.loading = true;
   };
 
   useEffect(() => {
@@ -127,6 +126,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
   useEffect(() => {
     if (!player) return;
+    if (!state.loading) return;
 
     // Update current time periodically
     const interval = setInterval(() => {
@@ -135,9 +135,11 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [player]);
+  }, [player,state.loading]);
 
   useEffect(() => {
+    if (!state.loading) return;
+
     // Find the active transcript index
     const activeIdx = state.transcript.findIndex(
       (entry: any, i: number) =>
@@ -162,12 +164,13 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
         });
       }
     }
-  }, [currentTime, activeIndex]);
+  }, [currentTime, activeIndex,state.loading]);
 
   const handleTranscriptClick = (time: string) => {
     // const seconds = convertTimeToSeconds(time);
     const seconds = Number(time);
-    player.seekTo(seconds, true);
+    console.log(`seconds ->:`, seconds);
+    player?.seekTo(seconds, true);
   };
 
   const jumpToNextMatch = () => {
