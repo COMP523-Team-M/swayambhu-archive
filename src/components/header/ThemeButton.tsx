@@ -21,32 +21,47 @@ export default function ThemeButton() {
 
   return (
     <>
-      <div className="theme-button relative cursor-pointer self-center border-l-2 pl-5 text-xl text-slate-500">
-        <IoSunnyOutline onClick={() => setShowThemes((prev) => !prev)} />
+      <div className="theme-button relative self-center border-l-2 pl-5 text-xl text-slate-500 dark:text-sky-400">
+        <IoSunnyOutline
+          onClick={() => setShowThemes((prev) => !prev)}
+          className="cursor-pointer"
+        />
         {showThemes && (
-          <div className="absolute right-0.5 top-full mt-5 rounded-lg border-2 bg-white text-slate-500 shadow-sm">
+          <div className="absolute right-0.5 top-full mt-5 rounded-lg border-2 bg-white text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-800">
             <div
-              className="flex cursor-pointer items-center rounded-lg px-3 py-1 hover:bg-slate-100"
+              className={`${theme === "light" && "text-sky-500"} flex cursor-pointer items-center rounded-lg px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-700`}
               onClick={() => setTheme("light")}
             >
               <IoSunnyOutline className="mr-2" />
-              <p className="text-sm font-semibold text-slate-700">Light</p>
+              <p
+                className={`${theme === "light" ? "text-sky-500" : "text-slate-700"} text-sm font-semibold dark:text-slate-200`}
+              >
+                Light
+              </p>
             </div>
 
             <div
-              className="flex cursor-pointer items-center px-3 py-1 hover:bg-slate-100"
+              className={`${theme === "dark" && "text-sky-400"} flex cursor-pointer items-center px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-700`}
               onClick={() => setTheme("dark")}
             >
               <BsMoonStars className="mr-2" />
-              <p className="text-sm font-semibold text-slate-700">Dark</p>
+              <p
+                className={`${theme === "dark" && "text-sky-400"} text-sm font-semibold text-slate-700`}
+              >
+                Dark
+              </p>
             </div>
 
             <div
-              className="flex cursor-pointer items-center rounded-lg px-3 py-1 hover:bg-slate-100"
+              className={`${theme === "system" && "text-sky-500"} flex cursor-pointer items-center rounded-lg px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-700`}
               onClick={() => setTheme("system")}
             >
               <RiComputerLine className="mr-2" />
-              <p className="text-sm font-semibold text-slate-700">System </p>
+              <p
+                className={`${theme === "system" && "text-sky-500"} ${theme === "light" && "text-slate-700"} ${theme === "dark" && "text-slate-200"} text-sm font-semibold`}
+              >
+                System
+              </p>
             </div>
           </div>
         )}

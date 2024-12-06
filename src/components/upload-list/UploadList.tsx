@@ -9,8 +9,8 @@ export default function UploadList() {
 
   return (
     <>
-      <div className="flex max-h-max min-h-96 w-80 flex-col rounded-3xl border p-8 shadow-xl">
-        <h2 className="mb-4 flex justify-between border-b-2 p-2 text-2xl font-semibold">
+      <div className="flex max-h-max min-h-96 w-80 flex-col rounded-3xl border p-8 shadow-xl dark:border-slate-600 dark:bg-slate-800">
+        <h2 className="mb-4 flex justify-between border-b-2 p-2 text-2xl font-semibold text-slate-700 dark:text-sky-400">
           <span>Uploads</span>
           <PlusSign />
         </h2>

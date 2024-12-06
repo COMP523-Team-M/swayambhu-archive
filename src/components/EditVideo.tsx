@@ -89,13 +89,15 @@ export default function EditVideo() {
 
   return (
     <>
-      <h1 className="mb-5 text-3xl font-bold">Edit Video</h1>
+      <h1 className="mb-5 text-3xl font-bold text-slate-700 dark:text-slate-200">
+        Edit Video
+      </h1>
       <form className="w-1/2" onSubmit={handleFormsubmit}>
         <label className="block">Title</label>
         <input
           required
           placeholder="A nice video"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="vidTitle"
         />
@@ -104,7 +106,7 @@ export default function EditVideo() {
         <input
           required
           placeholder="Enter link"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="baseVideoURL"
         />
@@ -113,14 +115,14 @@ export default function EditVideo() {
         <textarea
           required
           placeholder="An interview about..."
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           name="vidDescription"
         />
 
         <label className="block">Upload date</label>
         <input
           required
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="date"
           name="uploadDate"
         />
@@ -128,7 +130,7 @@ export default function EditVideo() {
         <label className="block">Date of recording</label>
         <input
           required
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="date"
           name="recordDate"
         />
@@ -137,7 +139,7 @@ export default function EditVideo() {
         <input
           required
           placeholder="Nepal"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="location"
         />
@@ -145,7 +147,7 @@ export default function EditVideo() {
         <label className="block">Tags (Comma separated list)</label>
         <input
           placeholder="Comma separated list (temple, tourist, monk)"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="tags"
         />
@@ -154,11 +156,11 @@ export default function EditVideo() {
         {transcript.results.map((line, index) => {
           return (
             <div className="flex" key={index}>
-              <label className="mr-5 mt-1 text-blue-500">
+              <label className="mr-5 mt-1 w-10 text-sky-500 dark:text-sky-400">
                 {line.timestamp}
               </label>
               <textarea
-                className="mb-3 min-h-5 w-full resize-none overflow-auto rounded-lg p-1 px-2 text-sm outline-none transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+                className="mb-3 min-h-5 w-full resize-none overflow-auto rounded-lg p-1 px-2 text-sm outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
                 value={input[index]}
                 onChange={(e) => {
                   handleChange(index, e);
@@ -171,16 +173,16 @@ export default function EditVideo() {
         })}
         <div className="mt-5 flex justify-between">
           <button
-            className="w-1/5 rounded-lg bg-blue-200 p-2 hover:outline hover:outline-blue-300"
+            onClick={() => router.push("/dashboard")}
+            className="w-1/5 rounded-lg bg-sky-500 p-2 text-white hover:outline hover:outline-sky-600 dark:hover:outline-sky-400"
+          >
+            Back
+          </button>
+          <button
+            className="w-1/5 rounded-lg bg-sky-500 p-2 text-white hover:outline hover:outline-sky-600 dark:hover:outline-sky-400"
             type="submit"
           >
             Submit
-          </button>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="w-1/5 rounded-lg bg-blue-200 p-2 hover:outline hover:outline-blue-300"
-          >
-            Back
           </button>
         </div>
       </form>

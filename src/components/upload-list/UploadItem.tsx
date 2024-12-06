@@ -9,7 +9,7 @@ interface Props {
 
 export default function UploadItem({ title, status }: Props) {
   return (
-    <div className="mb-2 flex justify-between text-slate-700">
+    <div className="mb-2 flex justify-between text-slate-700 dark:text-slate-200">
       <p>{title}</p>
       <p className={status === "Pending" ? "text-sky-500" : "text-green-500"}>
         {status}

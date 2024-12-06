@@ -29,13 +29,18 @@ export default function UploadForm() {
 
   return (
     <>
-      <h1 className="mb-5 text-3xl font-semibold">Upload Video</h1>
-      <form className="w-1/2 text-slate-700" onSubmit={handleSubmit}>
+      <h1 className="mb-5 text-3xl font-semibold text-slate-700 dark:text-slate-200">
+        Upload Video
+      </h1>
+      <form
+        className="w-1/2 text-slate-700 dark:text-slate-200 dark:focus-within:text-slate-400"
+        onSubmit={handleSubmit}
+      >
         <label className="block">Title</label>
         <input
           required
           placeholder="A nice video"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="vidTitle"
         />
@@ -44,7 +49,7 @@ export default function UploadForm() {
         <input
           required
           placeholder="Enter link"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="baseVideoURL"
         />
@@ -53,14 +58,14 @@ export default function UploadForm() {
         <textarea
           required
           placeholder="An interview about..."
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-colors duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-colors duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           name="vidDescription"
         />
 
         <label className="block">Upload date</label>
         <input
           required
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="date"
           name="uploadDate"
         />
@@ -68,7 +73,7 @@ export default function UploadForm() {
         <label className="block">Date of recording</label>
         <input
           required
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="date"
           name="recordDate"
         />
@@ -77,7 +82,7 @@ export default function UploadForm() {
         <input
           required
           placeholder="Nepal"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="location"
         />
@@ -85,7 +90,7 @@ export default function UploadForm() {
         <label className="block">Tags (Comma separated list)</label>
         <input
           placeholder="temple, tourist, monk"
-          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-blue-200"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
           name="tags"
         />
@@ -95,16 +100,16 @@ export default function UploadForm() {
 
         <div className="flex justify-between">
           <button
-            className="w-1/5 rounded-lg bg-blue-200 p-2 hover:outline hover:outline-blue-300"
+            onClick={() => router.push("/dashboard")}
+            className="w-1/5 rounded-lg bg-sky-500 p-2 text-white hover:outline hover:outline-sky-600 dark:hover:outline-sky-400"
+          >
+            Back
+          </button>
+          <button
+            className="w-1/5 rounded-lg bg-sky-500 p-2 text-white hover:outline hover:outline-sky-600 dark:hover:outline-sky-400"
             type="submit"
           >
             Submit
-          </button>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="w-1/5 rounded-lg bg-blue-200 p-2 hover:outline hover:outline-blue-300"
-          >
-            Back
           </button>
         </div>
       </form>

@@ -47,7 +47,9 @@ const VideoGallery: React.FC = () => {
 
   return (
     <div className="mx-10">
-      <h1 className="mb-4 text-center text-2xl font-semibold">Video Gallery</h1>
+      <h1 className="mb-4 text-center text-2xl font-semibold text-slate-700 dark:text-slate-200">
+        Video Gallery
+      </h1>
 
       {/* Search Bar */}
       <SearchBar onSearch={handleSearch} />
@@ -75,7 +77,7 @@ const VideoGallery: React.FC = () => {
                 alt={"A video"}
                 width={240}
                 height={135}
-                className="rounded-lg"
+                className="rounded-lg border shadow-sm dark:border-slate-600"
               ></Image>
               {/* <iframe
                 width="240"
@@ -89,15 +91,17 @@ const VideoGallery: React.FC = () => {
             <div className="flex w-80 flex-col">
               <Link
                 href={`/video/${video.id}`}
-                className="cursor-pointer text-xl text-sky-500 hover:underline"
+                className="cursor-pointer text-xl text-sky-500 hover:underline dark:text-sky-400"
               >
                 {video.title}
               </Link>
-              <p className="text-slate-700">Description</p>
-              <p className="text-slate-700">More Information</p>
+              <p className="text-slate-700 dark:text-slate-200">Description</p>
+              <p className="text-slate-700 dark:text-slate-200">
+                More Information
+              </p>
               <div className="mb-5 mt-auto self-end">
-                <BsPencilFill className="mr-2 inline cursor-pointer hover:text-blue-500"></BsPencilFill>
-                <FaTrashAlt className="inline cursor-pointer hover:text-blue-500"></FaTrashAlt>
+                <BsPencilFill className="mr-2 inline cursor-pointer hover:text-sky-500 dark:hover:text-sky-400"></BsPencilFill>
+                <FaTrashAlt className="inline cursor-pointer hover:text-sky-500 dark:hover:text-sky-400"></FaTrashAlt>
               </div>
             </div>
           </div>

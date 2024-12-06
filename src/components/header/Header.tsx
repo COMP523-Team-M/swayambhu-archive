@@ -9,7 +9,7 @@ export default async function Header() {
   const isLoggedIn = await isAuthenticated();
 
   return (
-    <nav className="flex items-center justify-between border-b-2 p-5">
+    <nav className="flex items-center justify-between border-b p-5 dark:border-slate-400">
       <div className="flex items-center gap-x-5">
         <Link href={"/"} className="flex items-center">
           <Image
@@ -23,16 +23,19 @@ export default async function Header() {
       </div>
       <div className="flex justify-center gap-x-5 font-semibold text-slate-700">
         {isLoggedIn && (
-          <Link href={"/dashboard"} className="hover:text-sky-500">
+          <Link
+            href={"/dashboard"}
+            className="hover:text-sky-500 dark:text-slate-200 dark:hover:text-sky-400"
+          >
             Dashboard
           </Link>
         )}
         {isLoggedIn ? (
-          <LogoutLink className="font-semibold hover:text-sky-500">
+          <LogoutLink className="font-semibold hover:text-sky-500 dark:text-slate-200 dark:hover:text-sky-400">
             Log out
           </LogoutLink>
         ) : (
-          <LoginLink className="font-semibold hover:text-sky-500">
+          <LoginLink className="font-semibold hover:text-sky-500 dark:text-slate-200 dark:hover:text-sky-400">
             Sign in
           </LoginLink>
         )}

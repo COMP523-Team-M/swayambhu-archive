@@ -22,7 +22,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body
+        className={`${inter.variable} bg-slate-50 font-sans antialiased dark:bg-slate-900 dark:text-white`}
+      >
         <div className="container mx-auto min-h-screen">
           <ThemeProvider>
             <Header />
