@@ -19,7 +19,7 @@ jest.mock("@/utils-ts/elasticsearch");
 jest.mock("@/app/api/elasticsearch/search/keyword-search/route");
 jest.mock("@/app/api/elasticsearch/search/semantic-search/route");
 jest.mock("@/app/api/elasticsearch/search/combined-search/route");
-jest.mock("@/app/api/utils-ts/generateEmbeddings", () => ({
+jest.mock("@/utils-ts/generateEmbeddings", () => ({
   generateEmbedding: jest.fn(),
 }));
 

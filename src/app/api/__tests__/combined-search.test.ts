@@ -6,7 +6,7 @@ jest.mock("@/utils-ts/elasticsearch", () => ({
   get: jest.fn(),
 }));
 
-jest.mock("../../../utils-ts/generateEmbeddings", () => ({
+jest.mock("@/utils-ts/generateEmbeddings", () => ({
   generateEmbedding: jest.fn().mockResolvedValue(new Array(3072).fill(0.1)),
 }));
 

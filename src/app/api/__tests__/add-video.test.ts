@@ -1,5 +1,6 @@
 import { POST } from "@/app/api/elasticsearch/CRUD/add-video/route";
 import client from "@/utils-ts/elasticsearch";
+import { readFileSync } from "fs";
 
 jest.mock("@/utils-ts/elasticsearch", () => ({
   index: jest.fn(),
@@ -10,7 +11,9 @@ jest.mock("uuid", () => ({
   v4: jest.fn().mockReturnValue("mock-uuid"),
 }));
 
-jest.mock("@./utils-ts/generateEmbeddings", () => ({
+const video64 = readFileSync("./src/app/api/test-video64.txt", "utf-8");
+
+jest.mock("@/utils-ts/generateEmbeddings", () => ({
   generateEmbedding: jest.fn().mockResolvedValue(new Array(3072).fill(0.1)),
 }));
 
@@ -26,7 +29,7 @@ global.fetch = jest.fn(() =>
   }),
 ) as jest.Mock;
 
-describe("POST /api/add-video", () => {
+describe("POST /api/elasticsearch/CRUD/add-video", () => {
   beforeEach(() => {
     jest.clearAllMocks();
   });
@@ -40,32 +43,17 @@ describe("POST /api/add-video", () => {
       location: "Nepal",
       tags: ["temple", "history"],
       baseVideoURL: "https://youtube.com/watch?v=abc12345xyz",
-      transcriptJson: {
-        results: [
-          {
-            alternatives: [
-              {
-                transcript: "Test transcript segment",
-                confidence: 0.9,
-                words: [
-                  {
-                    startOffset: "0.0s",
-                    endOffset: "1.0s",
-                    word: "Test",
-                    confidence: 0.9,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+      audio: {
+        name: "example.mp3",
+        type: "video/mp3",
+        content: video64,
       },
     };
 
     (client.index as jest.Mock).mockResolvedValue({ result: "created" });
 
     const response = await POST(
-      new Request("http://localhost:3000/api/add-video", {
+      new Request("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
         method: "POST",
         body: JSON.stringify(mockRequestBody),
       }),
@@ -103,7 +91,7 @@ describe("POST /api/add-video", () => {
     };
 
     const response = await POST(
-      new Request("http://localhost:3000/api/add-video", {
+      new Request("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
         method: "POST",
         body: JSON.stringify(mockRequestBody),
       }),
@@ -123,30 +111,15 @@ describe("POST /api/add-video", () => {
       location: "Nepal",
       tags: ["temple", "history"],
       baseVideoURL: "https://invalid-url.com",
-      transcriptJson: {
-        results: [
-          {
-            alternatives: [
-              {
-                transcript: "Test transcript",
-                confidence: 0.9,
-                words: [
-                  {
-                    startOffset: "0.0s",
-                    endOffset: "1.0s",
-                    word: "Test",
-                    confidence: 0.9,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+      audio: {
+        name: "example.mp3",
+        type: "video/mp3",
+        content: video64,
       },
     };
 
     const response = await POST(
-      new Request("http://localhost:3000/api/add-video", {
+      new Request("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
         method: "POST",
         body: JSON.stringify(mockRequestBody),
       }),
@@ -176,30 +149,15 @@ describe("POST /api/add-video", () => {
       location: "Nepal",
       tags: ["temple", "history"],
       baseVideoURL: "https://youtube.com/watch?v=abc12345xyz",
-      transcriptJson: {
-        results: [
-          {
-            alternatives: [
-              {
-                transcript: "Test transcript",
-                confidence: 0.9,
-                words: [
-                  {
-                    startOffset: "0.0s",
-                    endOffset: "1.0s",
-                    word: "Test",
-                    confidence: 0.9,
-                  },
-                ],
-              },
-            ],
-          },
-        ],
+      audio: {
+        name: "example.mp3",
+        type: "video/mp3",
+        content: video64,
       },
     };
 
     const response = await POST(
-      new Request("http://localhost:3000/api/add-video", {
+      new Request("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
         method: "POST",
         body: JSON.stringify(mockRequestBody),
       }),
