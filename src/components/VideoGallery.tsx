@@ -1,43 +1,22 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect } from "react";
 import SearchBar from "./SearchBar";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { BsPencilFill } from "react-icons/bs";
-import { FaTrashAlt } from "react-icons/fa";
 import Image from "next/image";
-
-const videoData = [
-  {
-    id: 1,
-    title: "UNC Computer Science",
-    url: "https://www.youtube.com/embed/HLn_jmDoOpw",
-  },
-  {
-    id: 2,
-    title: "Duke Computer Science",
-    url: "https://www.youtube.com/embed/vQsYzrp2tZY",
-  },
-  {
-    id: 3,
-    title: "NC State Computer Science",
-    url: "https://www.youtube.com/embed/LRoI-Rw4GBY",
-  },
-];
+import useReactive from "@/hooks/useReactive";
 
 const VideoGallery: React.FC = () => {
-  const [searchQuery, setSearchQuery] = useState(""); // Store the search query
   const router = useRouter(); // Initialize the router for navigation
 
-  const handleSearch = (query: string) => {
-    console.log("Search Query (From SearchBar):", query); // Debugging log
-    setSearchQuery(query); // Update the search query
-  };
-
   const handleButtonClick = () => {
-    if (searchQuery.trim()) {
-      const destination = `/searchResults?query=${encodeURIComponent(searchQuery)}`;
+    if (state.searchQuery.trim()) {
+      const destination = `/searchResults?query=${encodeURIComponent(
+        state.searchQuery,
+      )}`;
       console.log("Navigating to:", destination); // Debugging log
       router.push(destination); // Navigate programmatically
     } else {
@@ -45,67 +24,164 @@ const VideoGallery: React.FC = () => {
     }
   };
 
+  const state: any = useReactive({
+    searchQuery: "",
+    list: [],
+    loading: false,
+    currentPage: 1, // 添加当前页码
+    itemsPerPage: 4, // 每页显示数量
+    totalPages: 0,
+  });
+
+  const getList = async () => {
+    state.loading = true;
+    const res = await fetch(`/api/elasticsearch/CRUD/get-all-videos`);
+    const data = await res.json();
+    state.list = data?.results || [];
+    state.loading = false;
+
+    state.totalPages = Math.ceil(state.list.length / state.itemsPerPage);
+  };
+
+  useEffect(() => {
+    getList();
+  }, []);
+
+  // 计算总页数
+
+  // 获取当前页的数据
+  const getCurrentPageData = () => {
+    const startIndex = (state.currentPage - 1) * state.itemsPerPage;
+    const endIndex = startIndex + state.itemsPerPage;
+    return state.list.slice(startIndex, endIndex);
+  };
+
+  // 页码变化处理函数
+  const handlePageChange = (pageNumber: number) => {
+    state.currentPage = pageNumber;
+  };
+
+  if (state.loading) {
+    return (
+      <div className="mx-10">
+        <h1 className="mb-4 text-center text-2xl font-bold">Loading...</h1>
+      </div>
+    );
+  }
+
   return (
     <div className="mx-10">
       <h1 className="mb-4 text-center text-2xl font-semibold text-slate-700 dark:text-slate-200">
         Video Gallery
       </h1>
 
-      {/* Search Bar */}
-      <SearchBar onSearch={handleSearch} />
-
-      {/* Redirect to Search Results */}
-      <button
-        onClick={handleButtonClick}
-        className={`mt-6 rounded px-4 py-2 ${
-          searchQuery.trim()
-            ? "bg-blue-600 text-white hover:bg-blue-700"
-            : "cursor-not-allowed bg-gray-400 text-gray-600"
-        }`}
-        disabled={!searchQuery.trim()} // Disable button if query is empty
+      <div
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
       >
-        View Search Results
-      </button>
+        {/* Search Bar */}
+        <SearchBar
+          onSearch={(query: string) => {
+            state.searchQuery = query;
+          }}
+        />
+
+        {/* Redirect to Search Results */}
+        <button
+          onClick={handleButtonClick}
+          className={`mt-6 rounded px-4 py-2 ${
+            state.searchQuery.trim()
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "cursor-not-allowed bg-gray-400 text-gray-600"
+          }`}
+          disabled={!state.searchQuery.trim()} // Disable button if query is empty
+        >
+          View Search Results
+        </button>
+      </div>
+
+      <br />
 
       {/* Display Video Gallery */}
       <div className="flex flex-col items-center">
-        {videoData.map((video) => (
-          <div key={video.id} className="mb-5 flex border-b-2 last:border-b-0">
+        {getCurrentPageData().map((video: any) => (
+          <div key={video.vidID} className="mb-5 flex border-b-2">
             <div className="mr-5 pb-5">
               <Image
-                src={`https://img.youtube.com/vi/${video.url.split("embed/")[1]}/0.jpg`}
-                alt={"A video"}
+                src={`https://img.youtube.com/vi/${video.baseVideoURL.split("=")[1]}/0.jpg`}
+                alt="A video"
                 width={240}
                 height={135}
-                className="rounded-lg border shadow-sm dark:border-slate-600"
-              ></Image>
-              {/* <iframe
-                width="240"
-                height="135"
-                src={video.url}
-                frameBorder="0"
-                allowFullScreen
-                title={video.title}
-              ></iframe> */}
+                className="rounded-lg"
+                priority={false}
+                unoptimized
+              />
             </div>
             <div className="flex w-80 flex-col">
               <Link
-                href={`/video/${video.id}`}
-                className="cursor-pointer text-xl text-sky-500 hover:underline dark:text-sky-400"
+                href={`/video/${video.vidID}`}
+                className="cursor-pointer text-xl text-blue-600 hover:underline"
               >
-                {video.title}
+                {video.vidDescription}
               </Link>
-              <p className="text-slate-700 dark:text-slate-200">Description</p>
-              <p className="text-slate-700 dark:text-slate-200">
-                More Information
-              </p>
-              <div className="mb-5 mt-auto self-end">
-                <BsPencilFill className="mr-2 inline cursor-pointer hover:text-sky-500 dark:hover:text-sky-400"></BsPencilFill>
-                <FaTrashAlt className="inline cursor-pointer hover:text-sky-500 dark:hover:text-sky-400"></FaTrashAlt>
-              </div>
+
+              <p>Description: {video.vidDescription}</p>
+              <p>More Information: {video.vidMoreInfo}</p>
             </div>
           </div>
         ))}
+
+        {/* 添加分页控制器 */}
+        {state.list.length > 0 && (
+          <div className="mt-6 flex items-center gap-2">
+            <button
+              onClick={() => handlePageChange(state.currentPage - 1)}
+              disabled={state.currentPage === 1}
+              className={`rounded px-3 py-1 ${
+                state.currentPage === 1
+                  ? "cursor-not-allowed bg-gray-300"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              Previous
+            </button>
+
+            {/* 页码按钮组 */}
+            <div className="flex gap-1">
+              {Array.from(
+                { length: state.totalPages },
+                (_, index) => index + 1,
+              ).map((pageNum) => (
+                <button
+                  key={pageNum}
+                  onClick={() => handlePageChange(pageNum)}
+                  className={`rounded px-3 py-1 ${
+                    pageNum === state.currentPage
+                      ? "bg-blue-700 text-white"
+                      : "bg-gray-200 hover:bg-blue-600 hover:text-white"
+                  }`}
+                >
+                  {pageNum}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(state.currentPage + 1)}
+              disabled={state.currentPage === state.totalPages}
+              className={`rounded px-3 py-1 ${
+                state.currentPage === state.totalPages
+                  ? "cursor-not-allowed bg-gray-300"
+                  : "bg-blue-600 text-white hover:bg-blue-700"
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -1,166 +1,256 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import styles from "./VideoPage.module.css";
 import { VideoData } from "./VideoData"; // Assuming videoData is stored in a separate file
+import useReactive from "@/hooks/useReactive";
 
 interface VideoPageProps {
-    params: {
-        id: string;
-    };
+  params: {
+    id: string;
+  };
 }
 
+function convertTimeStrWithMilliseconds(timeStr: string) {
+  const num = Number(timeStr.replace(/s/g, ""));
+  const hours = Math.floor(num / 3600);
+  const remainingSeconds = num % 3600;
+  const minutes = Math.floor(remainingSeconds / 60);
+  const seconds = Math.floor(remainingSeconds % 60);
+  const hoursStr = hours.toString().padStart(2, "0");
+  const minutesStr = minutes.toString().padStart(2, "0");
+  const secondsStr = seconds.toString().padStart(2, "0");
+  return `${hoursStr}:${minutesStr}:${secondsStr}`;
+}
+
+const dataHandler = (data: any) => {
+  const newData: any[] = [];
+  data.englishTranscriptJson.results.forEach((it: any, index: number) => {
+    const feature = {
+      eText: "",
+      aText: "",
+      time: "",
+      showTime: "",
+    };
+    feature.eText = it.alternatives[0].transcript;
+    const timeStr =
+      it.alternatives[0].words[0].startOffset ||
+      it.alternatives[0].words[1].startOffset;
+
+    feature.time = timeStr.replace(/s/g, "");
+    feature.showTime = convertTimeStrWithMilliseconds(feature.time);
+    feature.aText =
+      data.transcriptJson.results[index].alternatives[0].transcript;
+
+    newData.push(feature);
+  });
+  console.log(`newData ->:`, newData);
+
+  return newData;
+};
+
 const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
-    const { id } = params;
-    const selectedVideo = VideoData[id] || VideoData["1"];
-    const [player, setPlayer] = useState<any>(null);
-    const [currentTime, setCurrentTime] = useState<number>(0);
-    const [activeIndex, setActiveIndex] = useState<number>(-1);
-    const [searchTerm, setSearchTerm] = useState<string>("");
-    const [filteredTranscript, setFilteredTranscript] = useState(selectedVideo.transcript);
-    const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
-    const transcriptRefs = useRef<HTMLDivElement[]>([]);
+  const { id } = params;
 
-    const convertTimeToSeconds = (time: string) => {
-        const parts = time.split(":").map(Number);
-        return parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : parts[0] * 60 + parts[1];
+  const state: any = useReactive({
+    loading: false,
+    selectedVideo: null,
+    transcript: [],
+  });
+
+  const [player, setPlayer] = useState<any>(null);
+  const [currentTime, setCurrentTime] = useState<number>(0);
+  const [activeIndex, setActiveIndex] = useState<number>(-1);
+  const [searchTerm, setSearchTerm] = useState<string>("");
+
+  const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
+  const transcriptRefs = useRef<HTMLDivElement[]>([]);
+  const transcriptContainerRef = useRef<HTMLDivElement>(null);
+
+  const getList = async () => {
+    const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
+    const data = await res.json();
+    state.selectedVideo = data || null;
+    state.transcript = dataHandler(state.selectedVideo);
+    state.loading = true;
+
+    const videoId = state.selectedVideo?.baseVideoURL.split("=")[1];
+    console.log(`videoId ->:`, videoId);
+
+    // Initialize YouTube API
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.className = "iframe_api";
+    script.async = true;
+    document.body.appendChild(script);
+
+    (window as any).onYouTubeIframeAPIReady = () => {
+      new (window as any).YT.Player("youtube-player", {
+        videoId,
+        events: {
+          onReady: (event: any) => {
+            console.log(`event ->:`, event);
+            setPlayer(event.target);
+          },
+        },
+      });
     };
+  };
 
-    useEffect(() => {
-        // Load YouTube API script
-        const script = document.createElement("script");
-        script.src = "https://www.youtube.com/iframe_api";
-        script.async = true;
-        document.body.appendChild(script);
+  useEffect(() => {
+    getList();
 
-        // Initialize YouTube player
-        (window as any).onYouTubeIframeAPIReady = () => {
-            const ytPlayer = new (window as any).YT.Player("youtube-player", {
-                videoId: selectedVideo.videoUrl.split("embed/")[1],
-                events: {
-                    onReady: (event: any) => setPlayer(event.target),
-                },
-            });
-        };
-
-        return () => {
-            if (player) player.destroy();
-        };
-    }, []);
-
-    useEffect(() => {
-        if (!player) return;
-
-        // Update current time periodically
-        const interval = setInterval(() => {
-            const time = player.getCurrentTime();
-            setCurrentTime(time);
-        }, 1000);
-
-        return () => clearInterval(interval);
-    }, [player]);
-
-    useEffect(() => {
-        // Find the active transcript index
-        const activeIdx = selectedVideo.transcript.findIndex(
-            (entry, i) =>
-                convertTimeToSeconds(entry.time) <= currentTime &&
-                (i === selectedVideo.transcript.length - 1 ||
-                    convertTimeToSeconds(selectedVideo.transcript[i + 1].time) > currentTime)
-        );
-
-        setActiveIndex(activeIdx);
-
-        if (activeIdx >= 0 && transcriptRefs.current[activeIdx]) {
-            transcriptRefs.current[activeIdx].scrollIntoView({ behavior: "smooth", block: "center" });
-        }
-    }, [currentTime]);
-
-    const handleTranscriptClick = (time: string) => {
-        const seconds = convertTimeToSeconds(time);
-        player.seekTo(seconds, true);
+    return () => {
+      player?.destroy();
+      state.selectedVideo = null;
+      document.querySelectorAll(".iframe_api").forEach((el) => {
+        el.remove();
+      });
+      (window as any).onYouTubeIframeAPIReady = null;
+      (window as any).YT = null;
     };
+  }, []);
 
-    const jumpToNextMatch = () => {
-        if (searchTerm.trim() !== "") {
-            const filtered = selectedVideo.transcript.filter((entry) =>
-                entry.text.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-            setFilteredTranscript(filtered);
+  useEffect(() => {
+    if (!player || !state.loading) return;
 
-            if (filtered.length > 0) {
-                const nextIndex = currentMatchIndex + 1 < filtered.length ? currentMatchIndex + 1 : 0;
-                setCurrentMatchIndex(nextIndex);
-                handleTranscriptClick(filtered[nextIndex].time);
-            } else {
-                setCurrentMatchIndex(-1);
-            }
-        }
-    };
+    const interval = setInterval(() => {
+      const time = player.getCurrentTime();
+      setCurrentTime(time);
+    }, 1000);
 
-    const handleClearFilter = () => {
-        setSearchTerm("");
-        setFilteredTranscript(selectedVideo.transcript);
-        setCurrentMatchIndex(-1);
-    };
+    return () => clearInterval(interval);
+  }, [player, state.loading]);
 
-    return (
-        <div className={styles.flex}>
-            <div className={styles.leftTwoThirds}>
-                <div id="youtube-player" className={styles.videoIframe}></div>
-            </div>
+  useEffect(() => {
+    if (!state.loading) return;
 
-            <div className={styles.rightOneThird}>
-                <h2 className="text-lg font-semibold mb-4 text-white">Transcript</h2>
-
-                {/* Search bar with Clear Filter and Jump to Next Match buttons */}
-                <div className="mb-4 flex gap-2">
-                    <input
-                        type="text"
-                        placeholder="Search transcript..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded text-black"
-                    />
-                    <button
-                        onClick={handleClearFilter}
-                        className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700"
-                    >
-                        Clear Filter
-                    </button>
-                    <button
-                        onClick={jumpToNextMatch}
-                        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                    >
-                        Jump to Next Match
-                    </button>
-                </div>
-
-                <div className="overflow-y-auto max-h-96 space-y-4 mt-4">
-                    {filteredTranscript.map((entry, index) => (
-                        <div
-                            key={index}
-                            ref={(el) => (transcriptRefs.current[index] = el!)}
-                            className={`border-b pb-2 cursor-pointer ${
-                                index === activeIndex ? "bg-gray-800" : ""
-                            }`}
-                            onClick={() => handleTranscriptClick(entry.time)}
-                        >
-                            <p className="text-sm text-blue-400">{entry.time}</p>
-                            <p className="text-white">{entry.text}</p>
-                        </div>
-                    ))}
-                </div>
-
-                <Link href="/">
-                    <button className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
-                        Return to Main Page
-                    </button>
-                </Link>
-            </div>
-        </div>
+    const activeIdx = state.transcript.findIndex(
+      (entry: any, i: number) =>
+        entry.time <= currentTime &&
+        (i === state.transcript.length - 1 ||
+          state.transcript[i + 1].time > currentTime),
     );
+
+    setActiveIndex(activeIdx);
+
+    if (activeIdx >= 0 && transcriptRefs.current[activeIdx]) {
+      const wordContainer = document.querySelector(
+        "#wordContainer",
+      ) as HTMLElement;
+
+      if (wordContainer) {
+        wordContainer.scrollTo({
+          top:
+            transcriptRefs.current[activeIdx].offsetTop -
+            wordContainer.offsetTop,
+          behavior: "smooth",
+        });
+      }
+    }
+  }, [currentTime, activeIndex, state.loading]);
+
+  const handleTranscriptClick = (time: string) => {
+    const seconds = Number(time);
+    console.log(`seconds ->:`, seconds);
+    player?.seekTo(seconds, true);
+  };
+
+  const jumpToNextMatch = () => {
+    if (searchTerm.trim() !== "") {
+      const filtered = state.transcript.filter(
+        (entry: any) =>
+          entry.eText.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          entry.aText.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+      state.transcript = filtered;
+
+      if (filtered.length > 0) {
+        const nextIndex =
+          currentMatchIndex + 1 < filtered.length ? currentMatchIndex + 1 : 0;
+        setCurrentMatchIndex(nextIndex);
+        handleTranscriptClick(filtered[nextIndex].time);
+      } else {
+        setCurrentMatchIndex(-1);
+      }
+    }
+  };
+
+  const handleClearFilter = () => {
+    setSearchTerm("");
+    state.transcript = dataHandler(state.selectedVideo);
+    setCurrentMatchIndex(-1);
+  };
+
+  return (
+    <div className={styles.container}>
+      <div className={styles.leftTwoThirds}>
+        <div id="youtube-player" className={styles.videoIframe}></div>
+      </div>
+
+      <div className={styles.rightOneThird}>
+        <h2 className="mb-4 text-lg font-semibold">
+          Transcript &nbsp;
+          <Link href="/">
+            <button className="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+              Return to Main Page
+            </button>
+          </Link>
+        </h2>
+
+        <div className="mb-1 flex gap-2">
+          <input
+            type="text"
+            placeholder="Search transcript..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded border border-gray-300 px-4 py-2 text-black"
+          />
+          <button
+            onClick={handleClearFilter}
+            className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+          >
+            Clear
+          </button>
+          <button
+            onClick={jumpToNextMatch}
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Next
+          </button>
+        </div>
+
+        <div
+          className="mt-4 max-h-96 space-y-4 overflow-y-auto"
+          ref={transcriptContainerRef}
+          id="wordContainer"
+        >
+          {state.transcript.map((entry: any, index: number) => (
+            <div
+              key={index}
+              className={`cursor-pointer border-b pb-2 ${
+                index === activeIndex ? "bg-gray-800" : ""
+              }`}
+              ref={(el: any) => (transcriptRefs.current[index] = el)}
+              onClick={() => handleTranscriptClick(entry.time)}
+            >
+              <p className="text-sm text-blue-400">{entry.showTime}</p>
+              <p className={`${index === activeIndex ? "text-white" : ""}`}>
+                {entry.eText}
+              </p>
+              <p className={`${index === activeIndex ? "text-white" : ""}`}>
+                {entry.aText}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
 };
 
 export default VideoPage;

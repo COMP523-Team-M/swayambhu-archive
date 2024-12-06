@@ -3,11 +3,16 @@
 import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
 
-export default function SearchBar({ onSearch }) {
+export default function SearchBar({
+  onSearch,
+}: {
+  onSearch: (query: string) => void;
+}) {
   const [searchQuery, setSearchQuery] = useState("");
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+    onSearch(e.target.value);
   };
 
   const performSearch = (e: React.FormEvent) => {

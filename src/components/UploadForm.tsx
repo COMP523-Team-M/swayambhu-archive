@@ -8,16 +8,43 @@ export default function UploadForm() {
 
   const { addUpload, updateStatus } = useUploadContext();
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const title = formData.get("vidTitle") as string;
 
+    const vidTitle = formData.get("vidTitle") as string;
+    const vidDescription = formData.get("vidDescription") as string;
+    const uploadDate = formData.get("uploadDate") as string;
+    const recordDate = formData.get("recordDate") as string;
+    const location = formData.get("location") as string;
+    const baseVideoURL = formData.get("baseVideoURL") as string;
+    const file = formData.get("audio") as File;
+
+    const fileBase64 = await toBase64(file);
+
+    const payload = {
+      vidTitle,
+      vidDescription,
+      uploadDate,
+      recordDate,
+      location,
+      baseVideoURL,
+      audio: {
+        name: file.name,
+        type: file.type,
+        content: fileBase64, // Base64 string
+      },
+    };
+
+    const title = vidTitle;
     addUpload({ title, status: "Pending" });
 
     // fetch("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
     //   method: "POST",
-    //   body: formData,
+    //   headers: {
+    //     "Content-Type": "application/json",
+    //   },
+    //   body: JSON.stringify(payload),
     // }).then(() => updateStatus(title, "Done"));
 
     new Promise((resolve) => setTimeout(() => resolve("wow"), 5000)).then(() =>
@@ -25,6 +52,15 @@ export default function UploadForm() {
     );
 
     router.push("/dashboard");
+  };
+
+  const toBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
   };
 
   return (

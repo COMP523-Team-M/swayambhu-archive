@@ -1,94 +1,107 @@
 .container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    overflow: hidden;
+  display: flex;
 }
 
 .videoSection {
-    flex: 3;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #000;
+  flex: 3;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #000;
 }
 
 .videoIframe {
-    width: 100%;
-    height: calc(100% - 32px); /* Maintain responsive height for the video */
-    max-height: 75vh; /* Ensure the video doesn't exceed the available screen height */
-    aspect-ratio: 16 / 9; /* Ensure the correct aspect ratio */
-    border: none; /* Optional: remove iframe border */
+  width: 100%;
+  height: calc(100% - 32px); /* Maintain responsive height for the video */
+  max-height: 75vh; /* Ensure the video doesn't exceed the available screen height */
+  aspect-ratio: 16 / 9; /* Ensure the correct aspect ratio */
+  border: none; /* Optional: remove iframe border */
+}
+
+.leftTwoThirds {
+  width: 72%;
+}
+
+.rightOneThird {
+  padding: 0 12px;
+
+  /* position: fixed;
+  right: 0;
+  top: 80px;
+  height: calc(100vh - 80px); */
+  width: 28%;
+
+  background: #fff;
 }
 
 .transcriptSection {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    padding: 16px;
-    background: #111;
-    color: white;
-    overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
+  background: #111;
+  color: white;
+  overflow-y: auto;
 }
 
 .searchBar {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
 .searchInput {
-    flex: 1;
-    padding: 8px;
-    border: 1px solid gray;
-    border-radius: 4px;
+  flex: 1;
+  padding: 8px;
+  border: 1px solid gray;
+  border-radius: 4px;
 }
 
 .clearButton,
 .jumpButton {
-    padding: 8px 16px;
-    border: none;
-    border-radius: 4px;
-    background: #333;
-    color: white;
-    cursor: pointer;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #333;
+  color: white;
+  cursor: pointer;
 }
 
 .clearButton:hover,
 .jumpButton:hover {
-    background: #555;
+  background: #555;
 }
 
 .transcript {
-    flex: 1;
-    overflow-y: auto;
+  flex: 1;
+  overflow-y: auto;
 }
 
 .transcriptEntry {
-    padding: 8px;
-    border-bottom: 1px solid gray;
-    cursor: pointer;
+  padding: 8px;
+  border-bottom: 1px solid gray;
+  cursor: pointer;
 }
 
 .transcriptEntry:hover,
 .transcriptEntry.active {
-    background: #222;
+  background: #222;
 }
 
 .transcriptTime {
-    color: #888;
+  color: #888;
 }
 
 .returnButton {
-    margin-top: 16px;
-    padding: 8px 16px;
-    background: blue;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
+  margin-top: 16px;
+  padding: 8px 16px;
+  background: blue;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
 }
 
 .returnButton:hover {
-    background: darkblue;
+  background: darkblue;
 }
