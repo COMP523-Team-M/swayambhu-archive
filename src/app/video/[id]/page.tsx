@@ -67,9 +67,18 @@ const initPt = () => {
   // Load YouTube API script
   const script = document.createElement("script");
   script.src = "https://www.youtube.com/iframe_api";
-  script.async = true;
+  // script.async = true;
   document.body.appendChild(script);
 };
+
+function onYouTubeIframeAPIReady(videoId: any, onPlayerReady: any) {
+  new (window as any).YT.Player("youtube-player", {
+    videoId,
+    events: {
+      onReady: onPlayerReady,
+    },
+  });
+}
 
 const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const { id } = params;
@@ -92,14 +101,18 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     console.log(`videoId ->:`, videoId);
 
     // Initialize YouTube player
-    (window as any).onYouTubeIframeAPIReady = () => {
-      new (window as any).YT.Player("youtube-player", {
-        videoId,
-        events: {
-          onReady: (event: any) => setPlayer(event.target),
-        },
-      });
-    };
+    // (window as any).onYouTubeIframeAPIReady = () => {
+    //   new (window as any).YT.Player("youtube-player", {
+    //     videoId,
+    //     events: {
+    //       onReady: (event: any) => setPlayer(event.target),
+    //     },
+    //   });
+    // };
+
+    onYouTubeIframeAPIReady(videoId, (event: any) => {
+      setPlayer(event.target);
+    });
   };
 
   useEffect(() => {
