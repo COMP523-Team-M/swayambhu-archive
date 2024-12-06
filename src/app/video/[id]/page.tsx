@@ -63,6 +63,14 @@ const dataHandler = (data: any) => {
   return newData;
 };
 
+const initPt = () => {
+  // Load YouTube API script
+  const script = document.createElement("script");
+  script.src = "https://www.youtube.com/iframe_api";
+  script.async = true;
+  document.body.appendChild(script);
+};
+
 const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const { id } = params;
 
@@ -79,10 +87,25 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     state.selectedVideo = data || {};
     state.transcript = dataHandler(state.selectedVideo);
     state.loading = true;
+
+    // Initialize YouTube player
+    (window as any).onYouTubeIframeAPIReady = () => {
+      new (window as any).YT.Player("youtube-player", {
+        videoId: state.selectedVideo?.baseVideoURL.split("=")[1],
+        events: {
+          onReady: (event: any) => setPlayer(event.target),
+        },
+      });
+    };
   };
 
   useEffect(() => {
+    initPt();
     getList();
+
+    return () => {
+      if (player) player.destroy();
+    };
   }, []);
 
   const [player, setPlayer] = useState<any>(null);
@@ -103,25 +126,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
   useEffect(() => {
     if (!state.loading) return;
-    // Load YouTube API script
-    const script = document.createElement("script");
-    script.src = "https://www.youtube.com/iframe_api";
-    script.async = true;
-    document.body.appendChild(script);
-
-    // Initialize YouTube player
-    (window as any).onYouTubeIframeAPIReady = () => {
-      new (window as any).YT.Player("youtube-player", {
-        videoId: state.selectedVideo?.baseVideoURL.split("=")[1],
-        events: {
-          onReady: (event: any) => setPlayer(event.target),
-        },
-      });
-    };
-
-    return () => {
-      if (player) player.destroy();
-    };
   }, [state.loading]);
 
   useEffect(() => {
@@ -135,7 +139,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     }, 1000);
 
     return () => clearInterval(interval);
-  }, [player,state.loading]);
+  }, [player, state.loading]);
 
   useEffect(() => {
     if (!state.loading) return;
@@ -164,7 +168,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
         });
       }
     }
-  }, [currentTime, activeIndex,state.loading]);
+  }, [currentTime, activeIndex, state.loading]);
 
   const handleTranscriptClick = (time: string) => {
     // const seconds = convertTimeToSeconds(time);
