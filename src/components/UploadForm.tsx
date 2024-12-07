@@ -20,6 +20,9 @@ export default function UploadForm() {
     const baseVideoURL = formData.get("baseVideoURL") as string;
     const file = formData.get("audio") as File;
 
+    const temp = formData.get("tags") as string;
+    const tags = temp.replace(/\s+/g, "").split(",");
+
     const fileBase64 = await toBase64(file);
 
     const payload = {
@@ -29,6 +32,7 @@ export default function UploadForm() {
       recordDate,
       location,
       baseVideoURL,
+      tags,
       audio: {
         name: file.name,
         type: file.type,
@@ -39,17 +43,17 @@ export default function UploadForm() {
     const title = vidTitle;
     addUpload({ title, status: "Pending" });
 
-    // fetch("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
-    //   method: "POST",
-    //   headers: {
-    //     "Content-Type": "application/json",
-    //   },
-    //   body: JSON.stringify(payload),
-    // }).then(() => updateStatus(title, "Done"));
+    fetch("http://localhost:3000/api/elasticsearch/CRUD/add-video", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    }).then(() => updateStatus(title, "Done"));
 
-    new Promise((resolve) => setTimeout(() => resolve("wow"), 5000)).then(() =>
-      updateStatus(title, "Done"),
-    );
+    // new Promise((resolve) => setTimeout(() => resolve("wow"), 5000)).then(() =>
+    //   updateStatus(title, "Done"),
+    // );
 
     router.push("/dashboard");
   };
