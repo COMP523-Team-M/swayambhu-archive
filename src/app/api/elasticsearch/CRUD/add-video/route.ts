@@ -157,15 +157,30 @@ async function transcribeAudio(file: Buffer, name: string) {
   const [operation] = await client.batchRecognize(transcriptionRequest);
   console.log(operation);
 
-  const [files] = await storage.bucket("test-speech123").getFiles({
-    prefix: "transcripts/",
-  });
+  // Wait for the operation to complete
+  await operation.promise();
 
-  const transcriptFile = files.find(
-    (file) =>
-      file.name.includes(name.split(".")[0]) &&
-      file.name.includes("_transcript_"),
-  );
+  // Poll for the transcript file
+  let transcriptFile;
+  const maxRetries = 10;
+  let attempts = 0;
+
+  while (attempts < maxRetries) {
+    const [files] = await storage.bucket("test-speech123").getFiles({
+      prefix: "transcripts/",
+    });
+
+    transcriptFile = files.find(
+      (file) =>
+        file.name.includes(name.split(".")[0]) &&
+        file.name.includes("_transcript_"),
+    );
+
+    if (transcriptFile) break;
+
+    attempts++;
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait 3 seconds
+  }
 
   if (!transcriptFile) {
     throw new Error("Transcription result file not found.");
