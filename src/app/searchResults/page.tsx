@@ -1,12 +1,156 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import useReactive from "@/hooks/useReactive";
 import Image from "next/image";
+import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
+import { FiArrowLeft, FiClock, FiSearch } from "react-icons/fi";
+
+// Progress bar component
+const ProgressBar = () => {
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, {
+    stiffness: 100,
+    damping: 30,
+    restDelta: 0.001
+  });
+
+  return (
+    <motion.div
+      className="fixed inset-x-0 top-0 z-50 h-1 origin-[0%] bg-gradient-to-r from-blue-500 to-purple-500"
+      style={{ scaleX }}
+    />
+  );
+};
+
+// Enhanced skeleton loader
+const SearchResultSkeleton = () => (
+  <div className="space-y-8">
+    {[1, 2, 3].map((i) => (
+      <div 
+        key={i} 
+        className="relative overflow-hidden rounded-xl bg-white/50 p-6 backdrop-blur-lg transition-all duration-500 dark:bg-slate-800/50"
+      >
+        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
+        <div className="flex flex-col gap-6 md:flex-row">
+          <div className="h-[135px] w-[240px] rounded-lg bg-slate-200/50 dark:bg-slate-700/50" />
+          <div className="flex-1 space-y-4">
+            <div className="h-6 w-3/4 rounded bg-slate-200/50 dark:bg-slate-700/50" />
+            <div className="space-y-2">
+              <div className="h-4 w-full rounded bg-slate-200/50 dark:bg-slate-700/50" />
+              <div className="h-4 w-5/6 rounded bg-slate-200/50 dark:bg-slate-700/50" />
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+);
+
+// Enhanced card component with magnetic effect
+const SearchResultCard = ({ result, index }: { result: any; index: number }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const isSnippet = result.type === 'snippet';
+  const videoId = result.baseVideoURL?.split("=")[1] || result.vidID;
+  const timestamp = result.timeSegment ? `&t=${result.timeSegment}s` : '';
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!cardRef.current) return;
+    const card = cardRef.current;
+    const rect = card.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const centerX = rect.width / 2;
+    const centerY = rect.height / 2;
+    const rotateX = (y - centerY) / 20;
+    const rotateY = (centerX - x) / 20;
+
+    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
+  };
+
+  const handleMouseLeave = () => {
+    if (!cardRef.current) return;
+    cardRef.current.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
+  };
+
+  return (
+    <motion.div
+      ref={cardRef}
+      initial={{ opacity: 0, y: 50 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -50 }}
+      transition={{ 
+        duration: 0.5, 
+        delay: index * 0.1,
+        type: "spring",
+        stiffness: 100 
+      }}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="group relative overflow-hidden rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-xl transition-all duration-300 hover:shadow-2xl dark:bg-slate-800/80 dark:shadow-slate-700/20"
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px] [mask-image:linear-gradient(0deg,white,transparent)]" />
+      
+      <div className="relative flex flex-col gap-6 md:flex-row">
+        <div className="flex-shrink-0 overflow-hidden rounded-lg shadow-md">
+          <div className="relative h-[135px] w-[240px]">
+            <Image
+              src={`https://img.youtube.com/vi/${videoId}/0.jpg`}
+              alt="Video thumbnail"
+              fill
+              className="transform object-cover transition-transform duration-300 group-hover:scale-105"
+              priority={false}
+              unoptimized
+            />
+            {isSnippet && result.timeSegment && (
+              <div className="absolute bottom-2 right-2 flex items-center gap-1 rounded-full bg-black/70 px-2 py-1 text-xs text-white backdrop-blur-sm">
+                <FiClock className="h-3 w-3" />
+                <span>{Math.floor(result.timeSegment / 60)}:{(result.timeSegment % 60).toString().padStart(2, '0')}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        <div className="flex-grow space-y-4">
+          <Link href={`/video/${result.vidID}${timestamp}`}>
+            <h2 className="font-outfit text-xl font-semibold text-slate-800 transition-colors duration-300 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400">
+              {isSnippet 
+                ? `Relevant Segment from Video ${result.vidID}`
+                : result.vidTitle || `Video ${result.vidID}`
+              }
+            </h2>
+          </Link>
+
+          <div className="text-slate-700 dark:text-slate-300">
+            {isSnippet ? (
+              <div className="space-y-4">
+                {result.transcriptSnippet && (
+                  <div className="rounded-lg bg-slate-50/50 p-4 backdrop-blur-sm transition-colors duration-300 hover:bg-slate-100/50 dark:bg-slate-700/50 dark:hover:bg-slate-600/50">
+                    <p className="mb-2 font-medium text-slate-600 dark:text-slate-300">Nepali:</p>
+                    <p className="text-slate-800 dark:text-slate-200">{result.transcriptSnippet}</p>
+                  </div>
+                )}
+                {result.englishTranslation && 
+                 result.englishTranslation !== result.transcriptSnippet && (
+                  <div className="rounded-lg bg-slate-50/50 p-4 backdrop-blur-sm transition-colors duration-300 hover:bg-slate-100/50 dark:bg-slate-700/50 dark:hover:bg-slate-600/50">
+                    <p className="mb-2 font-medium text-slate-600 dark:text-slate-300">English:</p>
+                    <p className="text-slate-800 dark:text-slate-200">{result.englishTranslation}</p>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <p className="text-slate-600 dark:text-slate-400">{result.vidDescription}</p>
+            )}
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  );
+};
 
 export default function SearchResultPage() {
   const searchParams = useSearchParams();
@@ -14,6 +158,7 @@ export default function SearchResultPage() {
 
   const state: any = useReactive({
     searchResults: [],
+    metadata: null,
     loading: false,
     currentPage: 1,
     itemsPerPage: 4,
@@ -22,122 +167,158 @@ export default function SearchResultPage() {
 
   const getList = async () => {
     state.loading = true;
-    const res = await fetch(
-      `/api/elasticsearch/search/keyword-search?query=${searchTerm}`,
-    );
-    const data = await res.json();
-    state.searchResults = data;
-    state.loading = false;
-    
-    state.totalPages = Math.ceil(state.searchResults.length / state.itemsPerPage);
-  };
-
-  const getCurrentPageData = () => {
-    const startIndex = (state.currentPage - 1) * state.itemsPerPage;
-    const endIndex = startIndex + state.itemsPerPage;
-    return state.searchResults.slice(startIndex, endIndex);
+    try {
+      const res = await fetch(
+        `/api/search-router?query=${searchTerm}&from=${(state.currentPage - 1) * state.itemsPerPage}&size=${state.itemsPerPage}`
+      );
+      const data = await res.json();
+      state.searchResults = data.results;
+      state.metadata = data.metadata;
+      state.totalPages = Math.ceil(data.metadata.totalResults / state.itemsPerPage);
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      state.loading = false;
+    }
   };
 
   const handlePageChange = (pageNumber: number) => {
     state.currentPage = pageNumber;
+    getList();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   useEffect(() => {
     getList();
-  }, []);
-
-  if (state.loading) {
-    return <div className="mx-auto my-10 w-4/5">Loading...</div>;
-  }
+  }, [searchTerm]);
 
   return (
-    <div className="mx-auto my-10 w-4/5">
-      <Link href="/">
-        <button className="mt-6 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
-          Return to Video Gallery
-        </button>
-      </Link>
-
-      <h1 className="mb-6 text-center text-2xl font-bold">Search Results</h1>
-
-      {state.searchResults.length > 0 ? (
-        <>
-          {getCurrentPageData().map(
-            ({ baseVideoURL, vidID, vidDescription }: any) => (
-              <div key={vidID} className="mb-6 flex rounded-lg border p-4">
-                <div>
-                  <Image
-                    src={`https://img.youtube.com/vi/${baseVideoURL.split("=")[1]}/0.jpg`}
-                    alt="A video"
-                    width={240}
-                    height={135}
-                    className="rounded-lg"
-                    priority={false}
-                    unoptimized
-                  />
+    <>
+      <ProgressBar />
+      <div className="container mx-auto my-10 max-w-6xl px-4">
+        <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+          <Link href="/">
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="group relative flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 text-white shadow-lg transition-all duration-300 hover:shadow-xl dark:from-blue-600 dark:to-blue-700"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+              <FiArrowLeft className="relative transition-transform duration-300 group-hover:-translate-x-1" />
+              <span className="relative">Return to Video Gallery</span>
+            </motion.button>
+          </Link>
+          
+          {state.metadata && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative overflow-hidden rounded-lg bg-white/80 p-4 shadow-lg backdrop-blur-xl dark:bg-slate-800/80"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5" />
+              <div className="relative grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+                <div className="text-slate-600 dark:text-slate-400">
+                  Type: <span className="font-medium text-slate-800 dark:text-slate-200">{state.metadata.searchType}</span>
                 </div>
-                <div className="mb-6 rounded-lg p-4">
-                  <Link href={`/video/${vidID}`}>
-                    <h2 className="text-xl font-semibold text-blue-600 hover:underline">
-                      {vidDescription || `Video ${vidID}`}
-                    </h2>
-                  </Link>
-                  <div className="mt-2 text-gray-700">
-                    <p>Description: {vidDescription}</p>
-                  </div>
+                <div className="text-slate-600 dark:text-slate-400">
+                  Level: <span className="font-medium text-slate-800 dark:text-slate-200">{state.metadata.level}</span>
+                </div>
+                <div className="text-slate-600 dark:text-slate-400">
+                  Results: <span className="font-medium text-slate-800 dark:text-slate-200">{state.metadata.totalResults}</span>
                 </div>
               </div>
-            ),
+            </motion.div>
           )}
+        </div>
 
-          <div className="mt-6 flex items-center justify-center gap-2">
-            <button
-              onClick={() => handlePageChange(state.currentPage - 1)}
-              disabled={state.currentPage === 1}
-              className={`rounded px-3 py-1 ${
-                state.currentPage === 1
-                  ? "cursor-not-allowed bg-gray-300"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
-            >
-              Previous
-            </button>
+        <AnimatePresence mode="wait">
+          {state.loading ? (
+            <SearchResultSkeleton />
+          ) : state.searchResults.length > 0 ? (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="space-y-6"
+              >
+                {state.searchResults.map((result: any, index: number) => (
+                  <SearchResultCard key={result.vidID} result={result} index={index} />
+                ))}
+              </motion.div>
 
-            <div className="flex gap-1">
-              {Array.from(
-                { length: state.totalPages },
-                (_, index) => index + 1,
-              ).map((pageNum) => (
-                <button
-                  key={pageNum}
-                  onClick={() => handlePageChange(pageNum)}
-                  className={`rounded px-3 py-1 ${
-                    pageNum === state.currentPage
-                      ? "bg-blue-700 text-white"
-                      : "bg-gray-200 hover:bg-blue-600 hover:text-white"
-                  }`}
+              {state.totalPages > 1 && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.2 }}
+                  className="mt-8 flex items-center justify-center gap-3"
                 >
-                  {pageNum}
-                </button>
-              ))}
-            </div>
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handlePageChange(state.currentPage - 1)}
+                    disabled={state.currentPage === 1}
+                    className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
+                      state.currentPage === 1
+                        ? "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
+                        : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 hover:opacity-100" />
+                    <span className="relative">Previous</span>
+                  </motion.button>
 
-            <button
-              onClick={() => handlePageChange(state.currentPage + 1)}
-              disabled={state.currentPage === state.totalPages}
-              className={`rounded px-3 py-1 ${
-                state.currentPage === state.totalPages
-                  ? "cursor-not-allowed bg-gray-300"
-                  : "bg-blue-600 text-white hover:bg-blue-700"
-              }`}
+                  <div className="flex gap-2">
+                    {Array.from(
+                      { length: state.totalPages },
+                      (_, index) => index + 1
+                    ).map((pageNum) => (
+                      <motion.button
+                        key={pageNum}
+                        whileHover={{ scale: 1.1 }}
+                        whileTap={{ scale: 0.9 }}
+                        onClick={() => handlePageChange(pageNum)}
+                        className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
+                          pageNum === state.currentPage
+                            ? "bg-blue-500 text-white shadow-lg shadow-blue-500/25 dark:bg-blue-600"
+                            : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                        }`}
+                      >
+                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 hover:opacity-100" />
+                        <span className="relative">{pageNum}</span>
+                      </motion.button>
+                    ))}
+                  </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => handlePageChange(state.currentPage + 1)}
+                    disabled={state.currentPage === state.totalPages}
+                    className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
+                      state.currentPage === state.totalPages
+                        ? "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
+                        : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                    }`}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 hover:opacity-100" />
+                    <span className="relative">Next</span>
+                  </motion.button>
+                </motion.div>
+              )}
+            </>
+          ) : (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-12 text-center text-lg text-slate-500 dark:text-slate-400"
             >
-              Next
-            </button>
-          </div>
-        </>
-      ) : (
-        <p className="text-center text-gray-500">No results found.</p>
-      )}
-    </div>
+              No results found for "{searchTerm}"
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </>
   );
 }
