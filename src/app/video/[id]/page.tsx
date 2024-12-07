@@ -12,7 +12,6 @@ interface VideoPageProps {
   };
 }
 
-// Progress bar component
 const ProgressBar = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -65,7 +64,6 @@ const dataHandler = (data: any) => {
   return newData;
 };
 
-// Enhanced loading skeleton
 const TranscriptSkeleton = () => (
   <div className="space-y-4">
     {[1, 2, 3, 4].map((i) => (
@@ -101,9 +99,119 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const [isAdvancedSearch, setIsAdvancedSearch] = useState<boolean>(false);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showEnglish, setShowEnglish] = useState<boolean>(true);
   
   const transcriptRefs = useRef<HTMLDivElement[]>([]);
   const transcriptContainerRef = useRef<HTMLDivElement>(null);
+
+  const getList = async () => {
+    state.loading = true;
+    try {
+      const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
+      const data = await res.json();
+      state.selectedVideo = data || null;
+      state.transcript = dataHandler(state.selectedVideo);
+
+      const videoUrl = state.selectedVideo?.baseVideoURL;
+      const videoId = videoUrl?.includes('watch?v=') 
+        ? videoUrl.split('watch?v=')[1]
+        : videoUrl?.split('youtu.be/')[1];
+
+      const container = document.getElementById('youtube-player');
+      if (container) {
+        container.innerHTML = '';
+        
+        const playerDiv = document.createElement('div');
+        playerDiv.id = 'yt-player';
+        container.appendChild(playerDiv);
+
+        if (!(window as any).YT) {
+          const tag = document.createElement('script');
+          tag.src = 'https://www.youtube.com/iframe_api';
+          const firstScriptTag = document.getElementsByTagName('script')[0];
+          firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
+        }
+
+        (window as any).onYouTubeIframeAPIReady = () => {
+          const newPlayer = new (window as any).YT.Player('yt-player', {
+            videoId: videoId,
+            height: '100%',
+            width: '100%',
+            playerVars: {
+              autoplay: 0,
+              modestbranding: 1,
+              rel: 0,
+              enablejsapi: 1
+            },
+            events: {
+              onReady: (event: any) => {
+                setPlayer(event.target);
+                state.loading = false;
+              },
+              onStateChange: (event: any) => {
+                console.log('Player state changed:', event.data);
+              },
+              onError: (error: any) => {
+                console.error('YouTube Player Error:', error);
+                state.loading = false;
+              }
+            }
+          });
+        };
+      }
+
+    } catch (error) {
+      console.error("Error loading video:", error);
+      state.loading = false;
+    }
+  };
+
+  useEffect(() => {
+    getList();
+    return () => {
+      player?.destroy();
+      state.selectedVideo = null;
+      document.querySelectorAll(".iframe_api").forEach((el) => el.remove());
+      (window as any).onYouTubeIframeAPIReady = null;
+      (window as any).YT = null;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!player) return;
+
+    const interval = setInterval(() => {
+      const time = player.getCurrentTime();
+      setCurrentTime(time);
+    }, 1000);
+
+    return () => clearInterval(interval);
+  }, [player]);
+
+  useEffect(() => {
+    if (state.loading) return;
+
+    const activeIdx = state.transcript.findIndex(
+      (entry: any, i: number) =>
+        entry.time <= currentTime &&
+        (i === state.transcript.length - 1 ||
+          state.transcript[i + 1].time > currentTime)
+    );
+
+    setActiveIndex(activeIdx);
+
+    if (activeIdx >= 0 && transcriptRefs.current[activeIdx]) {
+      transcriptRefs.current[activeIdx].scrollIntoView({ 
+        behavior: "smooth", 
+        block: "nearest" 
+      });
+    }
+  }, [currentTime, state.loading]);
+
+  const handleTranscriptClick = (time: string) => {
+    const seconds = Number(time);
+    player?.seekTo(seconds, true);
+  };
 
   const performAdvancedSearch = async (query: string) => {
     if (!query.trim()) return;
@@ -116,7 +224,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
       if (data.results && data.results.length > 0) {
         setSearchResults(data.results);
         
-        // If we have snippet results, jump to the first match
         if (data.metadata.level === 'snippet' && data.results[0].time) {
           handleTranscriptClick(data.results[0].time);
         }
@@ -128,90 +235,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     } finally {
       setIsSearching(false);
     }
-  };
-
-  const getList = async () => {
-    state.loading = true;
-    try {
-      const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
-      const data = await res.json();
-      state.selectedVideo = data || null;
-      state.transcript = dataHandler(state.selectedVideo);
-
-      const videoId = state.selectedVideo?.baseVideoURL.split("=")[1];
-
-      // Initialize YouTube API
-      const script = document.createElement("script");
-      script.src = "https://www.youtube.com/iframe_api";
-      script.className = "iframe_api";
-      script.async = true;
-      document.body.appendChild(script);
-
-      (window as any).onYouTubeIframeAPIReady = () => {
-        new (window as any).YT.Player("youtube-player", {
-          videoId,
-          events: {
-            onReady: (event: any) => {
-              setPlayer(event.target);
-            },
-          },
-        });
-      };
-    } catch (error) {
-      console.error("Error loading video:", error);
-    } finally {
-      state.loading = false;
-    }
-  };
-
-  useEffect(() => {
-    getList();
-
-    return () => {
-      player?.destroy();
-      state.selectedVideo = null;
-      document.querySelectorAll(".iframe_api").forEach((el) => el.remove());
-      (window as any).onYouTubeIframeAPIReady = null;
-      (window as any).YT = null;
-    };
-  }, []);
-
-  useEffect(() => {
-    if (!player || state.loading) return;
-
-    const interval = setInterval(() => {
-      const time = player.getCurrentTime();
-      setCurrentTime(time);
-    }, 1000);
-
-    return () => clearInterval(interval);
-  }, [player, state.loading]);
-
-  useEffect(() => {
-    if (state.loading) return;
-
-    const activeIdx = state.transcript.findIndex(
-      (entry: any, i: number) =>
-        entry.time <= currentTime &&
-        (i === state.transcript.length - 1 || state.transcript[i + 1].time > currentTime)
-    );
-
-    setActiveIndex(activeIdx);
-
-    if (activeIdx >= 0 && transcriptRefs.current[activeIdx]) {
-      const wordContainer = document.querySelector("#wordContainer") as HTMLElement;
-      if (wordContainer) {
-        wordContainer.scrollTo({
-          top: transcriptRefs.current[activeIdx].offsetTop - wordContainer.offsetTop - 100,
-          behavior: "smooth",
-        });
-      }
-    }
-  }, [currentTime, state.loading]);
-
-  const handleTranscriptClick = (time: string) => {
-    const seconds = Number(time);
-    player?.seekTo(seconds, true);
   };
 
   const jumpToNextMatch = () => {
@@ -246,7 +269,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
       <ProgressBar />
       <div className="flex min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/50 dark:from-slate-900 dark:to-slate-800/50">
         <div className="flex w-full flex-col lg:flex-row">
-          {/* Video Section */}
           <div className="w-full lg:w-8/12">
             <div className="relative aspect-video w-full bg-black">
               <div id="youtube-player" className="h-full w-full" />
@@ -263,7 +285,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
             )}
           </div>
 
-          {/* Transcript Section */}
           <div className="w-full lg:w-4/12">
             <div className="h-full bg-white/80 p-6 backdrop-blur-xl dark:bg-slate-800/80">
               <div className="mb-6 flex items-center justify-between">
@@ -283,7 +304,6 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                 </Link>
               </div>
 
-              {/* Search Section */}
               <div className="relative mb-4">
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
@@ -329,8 +349,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                     </motion.button>
                   </div>
                   
-                  {/* Advanced Search Toggle */}
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center justify-between gap-2">
                     <label className="relative inline-flex cursor-pointer items-center">
                       <input
                         type="checkbox"
@@ -343,11 +362,23 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                         Advanced Search
                       </span>
                     </label>
+
+                    <label className="relative inline-flex cursor-pointer items-center">
+                      <input
+                        type="checkbox"
+                        checked={showEnglish}
+                        onChange={(e) => setShowEnglish(e.target.checked)}
+                        className="peer sr-only"
+                      />
+                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
+                      <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                        {showEnglish ? "English" : "नेपाली"}
+                      </span>
+                    </label>
                   </div>
                 </div>
               </div>
 
-              {/* Transcript Content */}
               <div
                 className="relative h-[calc(100vh-300px)] space-y-4 overflow-y-auto rounded-lg bg-white/50 p-4 backdrop-blur-sm dark:bg-slate-800/50"
                 ref={transcriptContainerRef}
@@ -365,7 +396,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                         transition={{ duration: 0.3, delay: index * 0.05 }}
                         ref={(el: any) => (transcriptRefs.current[index] = el)}
                         onClick={() => handleTranscriptClick(entry.time)}
-                        className={`group cursor-pointer rounded-lg p-4 transition-all duration-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 ${
+                        className={`group cursor-pointer rounded-lg p-4 transition-all duration-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 scroll-mt-4 scroll-mb-4 ${
                           index === activeIndex
                             ? "bg-blue-500/10 dark:bg-blue-500/20"
                             : ""
@@ -378,12 +409,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                         <p className={`mt-2 text-slate-800 dark:text-slate-200 ${
                           index === activeIndex ? "font-medium" : ""
                         }`}>
-                          {entry.eText}
-                        </p>
-                        <p className={`mt-1 text-slate-600 dark:text-slate-400 ${
-                          index === activeIndex ? "font-medium" : ""
-                        }`}>
-                          {entry.aText}
+                          {showEnglish ? entry.eText : entry.aText}
                         </p>
                       </motion.div>
                     ))

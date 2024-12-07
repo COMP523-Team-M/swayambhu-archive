@@ -1,8 +1,6 @@
-/* eslint-disable react-hooks/exhaustive-deps */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import SearchBar from "../SearchBar";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -13,7 +11,6 @@ import SearchInfo from "./SearchInfo";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { FiSearch } from "react-icons/fi";
 
-// Progress bar component
 const ProgressBar = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
@@ -30,7 +27,6 @@ const ProgressBar = () => {
   );
 };
 
-// Enhanced loading skeleton
 const GallerySkeleton = () => (
   <div className="space-y-8">
     {[1, 2, 3, 4].map((i) => (
@@ -54,7 +50,6 @@ const GallerySkeleton = () => (
   </div>
 );
 
-// Enhanced video card component
 const VideoCard = ({ video }: { video: any }) => {
   const cardRef = useRef<HTMLDivElement>(null);
 
@@ -133,11 +128,12 @@ const VideoCard = ({ video }: { video: any }) => {
 
 const VideoGallery: React.FC = () => {
   const router = useRouter();
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const state: any = useReactive({
     searchQuery: "",
     list: [],
-    loading: false,
+    loading: true,
     currentPage: 1,
     itemsPerPage: 4,
     totalPages: 0,
@@ -153,16 +149,18 @@ const VideoGallery: React.FC = () => {
   };
 
   const getList = async () => {
-    state.loading = true;
-    try {
-      const res = await fetch(`/api/elasticsearch/CRUD/get-all-videos`);
-      const data = await res.json();
-      state.list = data?.results || [];
-      state.totalPages = Math.ceil(state.list.length / state.itemsPerPage);
-    } catch (error) {
-      console.error("Failed to fetch videos:", error);
-    } finally {
-      state.loading = false;
+    if (!isInitialized) {
+      try {
+        const res = await fetch(`/api/elasticsearch/CRUD/get-all-videos`);
+        const data = await res.json();
+        state.list = data?.results || [];
+        state.totalPages = Math.ceil(state.list.length / state.itemsPerPage);
+      } catch (error) {
+        console.error("Failed to fetch videos:", error);
+      } finally {
+        state.loading = false;
+        setIsInitialized(true);
+      }
     }
   };
 
