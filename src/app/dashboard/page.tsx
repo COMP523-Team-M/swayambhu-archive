@@ -1,5 +1,3 @@
-'use client'
-
 import UploadList from "@/components/upload-list/UploadList";
 import VideoGallery from "@/components/video-gallery/VideoGallery";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";

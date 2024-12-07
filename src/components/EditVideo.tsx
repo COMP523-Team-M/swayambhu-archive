@@ -3,8 +3,6 @@
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
 import { VideoData } from "@/app/api/elasticsearch/CRUD/get-video/route";
-import { motion, AnimatePresence } from "framer-motion";
-import { FiLoader, FiCheck, FiEdit3 } from "react-icons/fi";
 
 export default function EditVideo() {
   const { id } = useParams();
@@ -15,7 +13,9 @@ export default function EditVideo() {
   const [data, setData] = useState<VideoData | null>(null);
 
   const getVideo = async () => {
-    const response = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
+    const response = await fetch(
+      `/api/elasticsearch/CRUD/get-video?vidID=${id}`,
+    );
     const fetchedData: VideoData = await response.json();
     setData(fetchedData);
   };
@@ -25,8 +25,8 @@ export default function EditVideo() {
   }, []);
 
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    e.target.style.height = "auto";
-    e.target.style.height = `${e.target.scrollHeight}px`;
+    e.target.style.height = "auto"; // Reset the height to auto so it can shrink
+    e.target.style.height = `${e.target.scrollHeight}px`; // Set to the scrollHeight for auto expansion
   };
 
   const handleFormsubmit = (data: React.FormEvent<HTMLFormElement>) => {
@@ -34,10 +34,12 @@ export default function EditVideo() {
     const form = new FormData(data.currentTarget);
 
     const transcription = form.getAll("transcriptUpdates") as string[];
-    const transcriptionUpdates = transcription.map((value, index) => ({
-      segmentIndex: index,
-      newTranscript: value,
-    }));
+    const transcriptionUpdates = transcription.map((value, index) => {
+      return {
+        segmentIndex: index,
+        newTranscript: value,
+      };
+    });
 
     const body = {
       vidID: id,
@@ -53,11 +55,18 @@ export default function EditVideo() {
 
     setUploading(true);
     setShowAlert(true);
+    // fetch("http://localhost:3000/api/elasticsearch/CRUD/update-video", {
+    //   method: "PUT",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(body),
+    // }).then(() => setShowAlert(true));
 
-    new Promise((resolve) => setTimeout(() => resolve("yeet"), 3000)).then(() => {
-      setUploading(false);
-      setTimeout(() => router.push("/dashboard"), 2000);
-    });
+    new Promise((resolve) => setTimeout(() => resolve("yeet"), 3000)).then(
+      () => {
+        setUploading(false);
+        setTimeout(() => router.push("/dashboard"), 2000);
+      },
+    );
   };
 
   useEffect(() => {
@@ -69,142 +78,139 @@ export default function EditVideo() {
   }, [data]);
 
   if (!data) {
-    return (
-      <div className="flex h-[50vh] items-center justify-center">
-        <FiLoader className="h-8 w-8 animate-spin text-blue-500" />
-      </div>
-    );
+    return <h1>Loading...</h1>;
   }
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="relative w-full max-w-3xl"
-    >
-      <div className="mb-8 flex items-center gap-3">
-        <FiEdit3 className="h-8 w-8 text-blue-500" />
-        <h1 className="bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-3xl font-bold text-transparent dark:from-slate-200 dark:to-slate-400">
-          Edit Video
-        </h1>
-      </div>
+    <>
+      <h1 className="mb-5 text-3xl font-bold text-slate-700 dark:text-slate-200">
+        Edit Video
+      </h1>
+      <form className="w-1/2" onSubmit={handleFormsubmit}>
+        <label className="block">Title</label>
+        <input
+          required
+          placeholder="A nice video"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          type="text"
+          value={data.vidTitle}
+          onChange={(e) =>
+            setData((prevData) => ({ ...prevData!, vidTitle: e.target.value }))
+          }
+          name="vidTitle"
+        />
 
-      <motion.form
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="space-y-6"
-        onSubmit={handleFormsubmit}
-      >
-        {/* Form Fields */}
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Title</label>
-          <input
-            required
-            placeholder="A nice video"
-            className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700 dark:placeholder:text-slate-600"
-            type="text"
-            value={data.vidTitle}
-            onChange={(e) => setData((prevData) => ({ ...prevData!, vidTitle: e.target.value }))}
-            name="vidTitle"
-          />
-        </div>
+        <label className="block">YouTube link</label>
+        <input
+          required
+          placeholder="Enter link"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          type="text"
+          value={data.baseVideoURL}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              baseVideoURL: e.target.value,
+            }))
+          }
+          name="baseVideoURL"
+        />
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">YouTube link</label>
-          <input
-            required
-            placeholder="Enter link"
-            className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700 dark:placeholder:text-slate-600"
-            type="text"
-            value={data.baseVideoURL}
-            onChange={(e) => setData((prevData) => ({ ...prevData!, baseVideoURL: e.target.value }))}
-            name="baseVideoURL"
-          />
-        </div>
+        <label className="block">Video description</label>
+        <textarea
+          required
+          placeholder="An interview about..."
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          value={data.vidDescription}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              vidDescription: e.target.value,
+            }))
+          }
+          name="vidDescription"
+        />
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Video description</label>
-          <textarea
-            required
-            placeholder="An interview about..."
-            className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700 dark:placeholder:text-slate-600"
-            value={data.vidDescription}
-            onChange={(e) => setData((prevData) => ({ ...prevData!, vidDescription: e.target.value }))}
-            name="vidDescription"
-          />
-        </div>
+        <label className="block">Upload date</label>
+        <input
+          required
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          type="date"
+          value={data.uploadDate}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              uploadDate: e.target.value,
+            }))
+          }
+          name="uploadDate"
+        />
 
-        <div className="grid grid-cols-2 gap-6">
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Upload date</label>
-            <input
-              required
-              className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
-              type="date"
-              value={data.uploadDate}
-              onChange={(e) => setData((prevData) => ({ ...prevData!, uploadDate: e.target.value }))}
-              name="uploadDate"
-            />
-          </div>
+        <label className="block">Date of recording</label>
+        <input
+          required
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          type="date"
+          value={data.recordDate}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              recordDate: e.target.value,
+            }))
+          }
+          name="recordDate"
+        />
 
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Date of recording</label>
-            <input
-              required
-              className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
-              type="date"
-              value={data.recordDate}
-              onChange={(e) => setData((prevData) => ({ ...prevData!, recordDate: e.target.value }))}
-              name="recordDate"
-            />
-          </div>
-        </div>
+        <label className="block">Location of recording</label>
+        <input
+          required
+          placeholder="Nepal"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          type="text"
+          value={data.location}
+          onChange={(e) =>
+            setData((prevData) => ({ ...prevData!, location: e.target.value }))
+          }
+          name="location"
+        />
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Location of recording</label>
-          <input
-            required
-            placeholder="Nepal"
-            className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700 dark:placeholder:text-slate-600"
-            type="text"
-            value={data.location}
-            onChange={(e) => setData((prevData) => ({ ...prevData!, location: e.target.value }))}
-            name="location"
-          />
-        </div>
+        <label className="block">Tags (Comma separated list)</label>
+        <input
+          placeholder="Comma separated list (temple, tourist, monk)"
+          className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          type="text"
+          value={data.tags ? data.tags.join(", ") : ""}
+          onChange={(e) => {
+            const tags = e.target.value.split(",").map((tag) => tag.trim());
+            setData((prevData) => ({ ...prevData!, tags: tags }));
+          }}
+          name="tags"
+        />
 
-        <div className="space-y-2">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Tags</label>
-          <input
-            placeholder="temple, tourist, monk"
-            className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700 dark:placeholder:text-slate-600"
-            type="text"
-            value={data.tags ? data.tags.join(", ") : ""}
-            onChange={(e) => {
-              const tags = e.target.value.split(",").map((tag) => tag.trim());
-              setData((prevData) => ({ ...prevData!, tags: tags }));
-            }}
-            name="tags"
-          />
-        </div>
-
-        <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Transcript</label>
-          {data.englishTranscriptJson.results.map((line, index) => (
-            <div className="flex gap-4" key={index}>
-              <span className="mt-3 w-16 text-sm font-medium text-blue-500">
+        <label className="mb-3 block">Transcript</label>
+        {data.englishTranscriptJson.results.map((line, index) => {
+          return (
+            <div className="flex" key={index}>
+              <label className="mr-5 mt-1 w-10 text-sky-500 dark:text-sky-400">
                 {data.transcriptJson.results[index].resultEndOffset}
-              </span>
+              </label>
               <textarea
-                className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
+                className="mb-3 min-h-5 w-full resize-none overflow-auto rounded-lg p-1 px-2 text-sm outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
                 value={line.alternatives[0].transcript}
                 onChange={(e) => {
                   const newTranscript = e.target.value;
+
                   setData((prevData) => {
-                    if (!prevData) return prevData;
+                    if (!prevData) return prevData; // Ensure prevData is not null
+
+                    // Create a copy of the existing data to update
                     const updatedData = { ...prevData };
-                    updatedData.englishTranscriptJson.results[index].alternatives[0].transcript = newTranscript;
+
+                    // Update the specific transcript line
+                    updatedData.englishTranscriptJson.results[
+                      index
+                    ].alternatives[0].transcript = newTranscript;
+
                     return updatedData;
                   });
                   handleTextareaResize(e);
@@ -212,68 +218,34 @@ export default function EditVideo() {
                 name="transcriptUpdates"
               />
             </div>
-          ))}
-        </div>
-
-        <div className="mt-8 flex justify-between gap-4">
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+          );
+        })}
+        <div className="mt-5 flex justify-between">
+          <button
             onClick={() => router.push("/dashboard")}
-            className="group relative w-32 overflow-hidden rounded-lg bg-white/50 p-3 text-slate-800 shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg dark:bg-slate-800/50 dark:text-slate-200"
+            className="w-1/5 rounded-lg bg-sky-500 p-2 text-white hover:outline hover:outline-sky-600 dark:hover:outline-sky-400"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-slate-500/10 via-slate-500/10 to-slate-400/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            <span className="relative">Back</span>
-          </motion.button>
-
-          <motion.button
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
+            Back
+          </button>
+          <button
+            className="w-1/5 rounded-lg bg-sky-500 p-2 text-white hover:outline hover:outline-sky-600 dark:hover:outline-sky-400"
             type="submit"
-            className="group relative w-32 overflow-hidden rounded-lg bg-blue-500 p-3 text-white shadow-md transition-all duration-300 hover:shadow-lg"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/50 to-blue-500/50 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-            <span className="relative">Submit</span>
-          </motion.button>
+            Submit
+          </button>
         </div>
-      </motion.form>
+      </form>
 
-      <AnimatePresence>
-        {alert && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 20 }}
-            className="fixed bottom-5 right-5 overflow-hidden rounded-lg bg-white/80 shadow-lg backdrop-blur-sm dark:bg-slate-800/80"
-          >
-            <div className="relative px-6 py-4">
-              <div className="absolute bottom-0 left-0 h-1 w-full bg-gradient-to-r from-blue-500 to-purple-500">
-                {uploading && (
-                  <motion.div
-                    initial={{ width: "0%" }}
-                    animate={{ width: "100%" }}
-                    transition={{ duration: 3 }}
-                    className="h-full bg-blue-500"
-                  />
-                )}
-              </div>
-              <span className="flex items-center gap-2 text-slate-700 dark:text-slate-200">
-                {uploading ? (
-                  <>
-                    <FiLoader className="animate-spin" />
-                    Updating video...
-                  </>
-                ) : (
-                  <>
-                    <FiCheck className="text-green-500" />
-                    Video updated successfully
-                  </>
-                )}
-              </span>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </motion.div>
+      {alert && (
+        <div
+          className="fixed bottom-5 rounded border border-slate-600 bg-slate-900 px-4 py-3 text-white"
+          role="alert"
+        >
+          <span className="block sm:inline">
+            {uploading ? "Updating video..." : "Video updated successfully"}
+          </span>
+        </div>
+      )}
+    </>
   );
 }

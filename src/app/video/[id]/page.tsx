@@ -1,33 +1,19 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
+import styles from "./VideoPage.module.css";
+import { VideoData } from "./VideoData"; // Assuming videoData is stored in a separate file
 import useReactive from "@/hooks/useReactive";
-import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
-import { FiArrowLeft, FiSearch, FiX, FiClock } from "react-icons/fi";
 
 interface VideoPageProps {
   params: {
     id: string;
   };
 }
-
-// Progress bar component
-const ProgressBar = () => {
-  const { scrollYProgress } = useScroll();
-  const scaleX = useSpring(scrollYProgress, {
-    stiffness: 100,
-    damping: 30,
-    restDelta: 0.001
-  });
-
-  return (
-    <motion.div
-      className="fixed inset-x-0 top-0 z-50 h-1 origin-[0%] bg-gradient-to-r from-blue-500 to-purple-500"
-      style={{ scaleX }}
-    />
-  );
-};
 
 function convertTimeStrWithMilliseconds(timeStr: string) {
   const num = Number(timeStr.replace(/s/g, ""));
@@ -62,27 +48,10 @@ const dataHandler = (data: any) => {
 
     newData.push(feature);
   });
+  console.log(`newData ->:`, newData);
+
   return newData;
 };
-
-// Enhanced loading skeleton
-const TranscriptSkeleton = () => (
-  <div className="space-y-4">
-    {[1, 2, 3, 4].map((i) => (
-      <div 
-        key={i} 
-        className="relative overflow-hidden rounded-lg bg-white/50 p-4 backdrop-blur-lg transition-all duration-500 dark:bg-slate-800/50"
-      >
-        <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        <div className="space-y-2">
-          <div className="h-4 w-1/6 rounded bg-slate-200/50 dark:bg-slate-700/50" />
-          <div className="h-4 w-full rounded bg-slate-200/50 dark:bg-slate-700/50" />
-          <div className="h-4 w-5/6 rounded bg-slate-200/50 dark:bg-slate-700/50" />
-        </div>
-      </div>
-    ))}
-  </div>
-);
 
 const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const { id } = params;
@@ -97,71 +66,39 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const [currentTime, setCurrentTime] = useState<number>(0);
   const [activeIndex, setActiveIndex] = useState<number>(-1);
   const [searchTerm, setSearchTerm] = useState<string>("");
+
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
-  const [isAdvancedSearch, setIsAdvancedSearch] = useState<boolean>(false);
-  const [isSearching, setIsSearching] = useState<boolean>(false);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  
   const transcriptRefs = useRef<HTMLDivElement[]>([]);
   const transcriptContainerRef = useRef<HTMLDivElement>(null);
 
-  const performAdvancedSearch = async (query: string) => {
-    if (!query.trim()) return;
-    
-    setIsSearching(true);
-    try {
-      const res = await fetch(`/api/elasticsearch/search?query=${encodeURIComponent(query)}&filters[vidID]=${id}`);
-      const data = await res.json();
-      
-      if (data.results && data.results.length > 0) {
-        setSearchResults(data.results);
-        
-        // If we have snippet results, jump to the first match
-        if (data.metadata.level === 'snippet' && data.results[0].time) {
-          handleTranscriptClick(data.results[0].time);
-        }
-      } else {
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error("Error in advanced search:", error);
-    } finally {
-      setIsSearching(false);
-    }
-  };
-
   const getList = async () => {
+    const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
+    const data = await res.json();
+    state.selectedVideo = data || null;
+    state.transcript = dataHandler(state.selectedVideo);
     state.loading = true;
-    try {
-      const res = await fetch(`/api/elasticsearch/CRUD/get-video?vidID=${id}`);
-      const data = await res.json();
-      state.selectedVideo = data || null;
-      state.transcript = dataHandler(state.selectedVideo);
 
-      const videoId = state.selectedVideo?.baseVideoURL.split("=")[1];
+    const videoId = state.selectedVideo?.baseVideoURL.split("=")[1];
+    console.log(`videoId ->:`, videoId);
 
-      // Initialize YouTube API
-      const script = document.createElement("script");
-      script.src = "https://www.youtube.com/iframe_api";
-      script.className = "iframe_api";
-      script.async = true;
-      document.body.appendChild(script);
+    // Initialize YouTube API
+    const script = document.createElement("script");
+    script.src = "https://www.youtube.com/iframe_api";
+    script.className = "iframe_api";
+    script.async = true;
+    document.body.appendChild(script);
 
-      (window as any).onYouTubeIframeAPIReady = () => {
-        new (window as any).YT.Player("youtube-player", {
-          videoId,
-          events: {
-            onReady: (event: any) => {
-              setPlayer(event.target);
-            },
+    (window as any).onYouTubeIframeAPIReady = () => {
+      new (window as any).YT.Player("youtube-player", {
+        videoId,
+        events: {
+          onReady: (event: any) => {
+            console.log(`event ->:`, event);
+            setPlayer(event.target);
           },
-        });
-      };
-    } catch (error) {
-      console.error("Error loading video:", error);
-    } finally {
-      state.loading = false;
-    }
+        },
+      });
+    };
   };
 
   useEffect(() => {
@@ -170,14 +107,16 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
     return () => {
       player?.destroy();
       state.selectedVideo = null;
-      document.querySelectorAll(".iframe_api").forEach((el) => el.remove());
+      document.querySelectorAll(".iframe_api").forEach((el) => {
+        el.remove();
+      });
       (window as any).onYouTubeIframeAPIReady = null;
       (window as any).YT = null;
     };
   }, []);
 
   useEffect(() => {
-    if (!player || state.loading) return;
+    if (!player || !state.loading) return;
 
     const interval = setInterval(() => {
       const time = player.getCurrentTime();
@@ -188,44 +127,51 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   }, [player, state.loading]);
 
   useEffect(() => {
-    if (state.loading) return;
+    if (!state.loading) return;
 
     const activeIdx = state.transcript.findIndex(
       (entry: any, i: number) =>
         entry.time <= currentTime &&
-        (i === state.transcript.length - 1 || state.transcript[i + 1].time > currentTime)
+        (i === state.transcript.length - 1 ||
+          state.transcript[i + 1].time > currentTime),
     );
 
     setActiveIndex(activeIdx);
 
     if (activeIdx >= 0 && transcriptRefs.current[activeIdx]) {
-      const wordContainer = document.querySelector("#wordContainer") as HTMLElement;
+      const wordContainer = document.querySelector(
+        "#wordContainer",
+      ) as HTMLElement;
+
       if (wordContainer) {
         wordContainer.scrollTo({
-          top: transcriptRefs.current[activeIdx].offsetTop - wordContainer.offsetTop - 100,
+          top:
+            transcriptRefs.current[activeIdx].offsetTop -
+            wordContainer.offsetTop,
           behavior: "smooth",
         });
       }
     }
-  }, [currentTime, state.loading]);
+  }, [currentTime, activeIndex, state.loading]);
 
   const handleTranscriptClick = (time: string) => {
     const seconds = Number(time);
+    console.log(`seconds ->:`, seconds);
     player?.seekTo(seconds, true);
   };
 
   const jumpToNextMatch = () => {
-    if (isAdvancedSearch) {
-      performAdvancedSearch(searchTerm);
-    } else if (searchTerm.trim() !== "") {
+    if (searchTerm.trim() !== "") {
       const filtered = state.transcript.filter(
         (entry: any) =>
           entry.eText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          entry.aText.toLowerCase().includes(searchTerm.toLowerCase())
+          entry.aText.toLowerCase().includes(searchTerm.toLowerCase()),
       );
+      state.transcript = filtered;
 
       if (filtered.length > 0) {
-        const nextIndex = currentMatchIndex + 1 < filtered.length ? currentMatchIndex + 1 : 0;
+        const nextIndex =
+          currentMatchIndex + 1 < filtered.length ? currentMatchIndex + 1 : 0;
         setCurrentMatchIndex(nextIndex);
         handleTranscriptClick(filtered[nextIndex].time);
       } else {
@@ -236,165 +182,74 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
   const handleClearFilter = () => {
     setSearchTerm("");
-    setSearchResults([]);
     state.transcript = dataHandler(state.selectedVideo);
     setCurrentMatchIndex(-1);
   };
 
   return (
-    <>
-      <ProgressBar />
-      <div className="flex min-h-screen bg-gradient-to-b from-slate-50 to-slate-100/50 dark:from-slate-900 dark:to-slate-800/50">
-        <div className="flex w-full flex-col lg:flex-row">
-          {/* Video Section */}
-          <div className="w-full lg:w-8/12">
-            <div className="relative aspect-video w-full bg-black">
-              <div id="youtube-player" className="h-full w-full" />
+    <div className={styles.container}>
+      <div className={styles.leftTwoThirds}>
+        <div id="youtube-player" className={styles.videoIframe}></div>
+      </div>
+
+      <div className={styles.rightOneThird}>
+        <h2 className="mb-4 text-lg font-semibold">
+          Transcript &nbsp;
+          <Link href="/">
+            <button className="mt-4 rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700">
+              Return to Main Page
+            </button>
+          </Link>
+        </h2>
+
+        <div className="mb-1 flex gap-2">
+          <input
+            type="text"
+            placeholder="Search transcript..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full rounded border border-gray-300 px-4 py-2 text-black"
+          />
+          <button
+            onClick={handleClearFilter}
+            className="rounded bg-gray-600 px-4 py-2 text-white hover:bg-gray-700"
+          >
+            Clear
+          </button>
+          <button
+            onClick={jumpToNextMatch}
+            className="rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
+          >
+            Next
+          </button>
+        </div>
+
+        <div
+          className="mt-4 max-h-96 space-y-4 overflow-y-auto"
+          ref={transcriptContainerRef}
+          id="wordContainer"
+        >
+          {state.transcript.map((entry: any, index: number) => (
+            <div
+              key={index}
+              className={`cursor-pointer border-b pb-2 ${
+                index === activeIndex ? "bg-gray-800" : ""
+              }`}
+              ref={(el: any) => (transcriptRefs.current[index] = el)}
+              onClick={() => handleTranscriptClick(entry.time)}
+            >
+              <p className="text-sm text-blue-400">{entry.showTime}</p>
+              <p className={`${index === activeIndex ? "text-white" : ""}`}>
+                {entry.eText}
+              </p>
+              <p className={`${index === activeIndex ? "text-white" : ""}`}>
+                {entry.aText}
+              </p>
             </div>
-            {state.selectedVideo && (
-              <div className="bg-white/80 p-6 backdrop-blur-xl dark:bg-slate-800/80">
-                <h1 className="text-2xl font-semibold text-slate-800 dark:text-slate-200">
-                  {state.selectedVideo.vidTitle}
-                </h1>
-                <p className="mt-2 text-slate-600 dark:text-slate-400">
-                  {state.selectedVideo.vidDescription}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Transcript Section */}
-          <div className="w-full lg:w-4/12">
-            <div className="h-full bg-white/80 p-6 backdrop-blur-xl dark:bg-slate-800/80">
-              <div className="mb-6 flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-200">
-                  Transcript
-                </h2>
-                <Link href="/">
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className="group relative flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-4 py-2 text-white shadow-lg transition-all duration-300 hover:shadow-xl dark:from-blue-600 dark:to-blue-700"
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                    <FiArrowLeft className="relative transition-transform duration-300 group-hover:-translate-x-1" />
-                    <span className="relative">Return</span>
-                  </motion.button>
-                </Link>
-              </div>
-
-              {/* Search Section */}
-              <div className="relative mb-4">
-                <div className="flex flex-col gap-2">
-                  <div className="flex gap-2">
-                    <div className="relative flex-1">
-                      <input
-                        type="text"
-                        placeholder={isAdvancedSearch ? "Try semantic or natural language search..." : "Search transcript..."}
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full rounded-lg border border-slate-200 bg-white/50 px-4 py-2 pl-10 text-slate-800 placeholder-slate-400 backdrop-blur-sm transition-all duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500"
-                      />
-                      <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
-                    </div>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={handleClearFilter}
-                      className="group relative overflow-hidden rounded-lg bg-slate-200 px-4 py-2 text-slate-700 transition-all duration-300 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-slate-400/10 to-slate-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                      <span className="relative">Clear</span>
-                    </motion.button>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => isAdvancedSearch ? performAdvancedSearch(searchTerm) : jumpToNextMatch()}
-                      className="group relative overflow-hidden rounded-lg bg-blue-500 px-4 py-2 text-white transition-all duration-300 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-blue-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                      {isSearching ? (
-                        <span className="relative flex items-center gap-2">
-                          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Searching...
-                        </span>
-                      ) : (
-                        <span className="relative">Search</span>
-                      )}
-                    </motion.button>
-                  </div>
-                  
-                  {/* Advanced Search Toggle */}
-                  <div className="flex items-center gap-2">
-                    <label className="relative inline-flex cursor-pointer items-center">
-                      <input
-                        type="checkbox"
-                        checked={isAdvancedSearch}
-                        onChange={(e) => setIsAdvancedSearch(e.target.checked)}
-                        className="peer sr-only"
-                      />
-                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
-                      <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Advanced Search
-                      </span>
-                    </label>
-                  </div>
-                </div>
-              </div>
-
-              {/* Transcript Content */}
-              <div
-                className="relative h-[calc(100vh-300px)] space-y-4 overflow-y-auto rounded-lg bg-white/50 p-4 backdrop-blur-sm dark:bg-slate-800/50"
-                ref={transcriptContainerRef}
-                id="wordContainer"
-              >
-                <AnimatePresence mode="wait">
-                  {state.loading ? (
-                    <TranscriptSkeleton />
-                  ) : (
-                    state.transcript.map((entry: any, index: number) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        ref={(el: any) => (transcriptRefs.current[index] = el)}
-                        onClick={() => handleTranscriptClick(entry.time)}
-                        className={`group cursor-pointer rounded-lg p-4 transition-all duration-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 ${
-                          index === activeIndex
-                            ? "bg-blue-500/10 dark:bg-blue-500/20"
-                            : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400">
-                          <FiClock className="h-4 w-4" />
-                          <span>{entry.showTime}</span>
-                        </div>
-                        <p className={`mt-2 text-slate-800 dark:text-slate-200 ${
-                          index === activeIndex ? "font-medium" : ""
-                        }`}>
-                          {entry.eText}
-                        </p>
-                        <p className={`mt-1 text-slate-600 dark:text-slate-400 ${
-                          index === activeIndex ? "font-medium" : ""
-                        }`}>
-                          {entry.aText}
-                        </p>
-                      </motion.div>
-                    ))
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

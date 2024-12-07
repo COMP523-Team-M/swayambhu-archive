@@ -5,7 +5,6 @@ import { IoSunnyOutline } from "react-icons/io5";
 import { BsMoonStars } from "react-icons/bs";
 import { RiComputerLine } from "react-icons/ri";
 import { useTheme } from "@/context/ThemeProvider";
-import { motion, AnimatePresence } from "framer-motion";
 
 export default function ThemeButton() {
   const [showThemes, setShowThemes] = useState(false);
@@ -21,48 +20,52 @@ export default function ThemeButton() {
   }, []);
 
   return (
-    <div className="theme-button relative">
-      <motion.button
-        whileHover={{ scale: 1.1 }}
-        whileTap={{ scale: 0.9 }}
-        className="flex h-10 w-10 items-center justify-center rounded-lg bg-white/50 text-xl text-slate-600 shadow-sm backdrop-blur-sm transition-colors duration-300 hover:text-blue-500 dark:bg-slate-800/50 dark:text-slate-400 dark:hover:text-blue-400"
-        onClick={() => setShowThemes((prev) => !prev)}
-      >
-        <IoSunnyOutline />
-      </motion.button>
-
-      <AnimatePresence>
+    <>
+      <div className="theme-button relative self-center border-l-2 pl-5 text-xl text-slate-500 dark:text-sky-400">
+        <IoSunnyOutline
+          onClick={() => setShowThemes((prev) => !prev)}
+          className="cursor-pointer"
+        />
         {showThemes && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="absolute right-0 top-full mt-2 overflow-hidden rounded-xl bg-white/80 p-1 shadow-lg backdrop-blur-xl dark:bg-slate-800/80"
-          >
-            {[
-              { id: "light", icon: IoSunnyOutline, label: "Light" },
-              { id: "dark", icon: BsMoonStars, label: "Dark" },
-              { id: "system", icon: RiComputerLine, label: "System" },
-            ].map((item) => (
-              <motion.button
-                key={item.id}
-                whileHover={{ scale: 1.02, x: 2 }}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => setTheme(item.id as "light" | "dark" | "system")}
-                className={`flex w-full items-center gap-2 rounded-lg px-4 py-2 transition-all duration-300
-                  ${theme === item.id 
-                    ? "bg-blue-500/10 text-blue-500 dark:bg-blue-500/20 dark:text-blue-400" 
-                    : "text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-700/50"
-                  }`}
+          <div className="absolute right-0.5 top-full mt-5 rounded-lg border-2 bg-white text-slate-500 shadow-sm dark:border-slate-700 dark:bg-slate-800">
+            <div
+              className={`${theme === "light" && "text-sky-500"} flex cursor-pointer items-center rounded-lg px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-700`}
+              onClick={() => setTheme("light")}
+            >
+              <IoSunnyOutline className="mr-2" />
+              <p
+                className={`${theme === "light" ? "text-sky-500" : "text-slate-700"} text-sm font-semibold dark:text-slate-200`}
               >
-                <item.icon className="text-lg" />
-                <span className="text-sm font-medium">{item.label}</span>
-              </motion.button>
-            ))}
-          </motion.div>
+                Light
+              </p>
+            </div>
+
+            <div
+              className={`${theme === "dark" && "text-sky-400"} flex cursor-pointer items-center px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-700`}
+              onClick={() => setTheme("dark")}
+            >
+              <BsMoonStars className="mr-2" />
+              <p
+                className={`${theme === "dark" ? "text-sky-400" : "text-slate-700"} text-sm font-semibold`}
+              >
+                Dark
+              </p>
+            </div>
+
+            <div
+              className={`${theme === "system" && "text-sky-500"} flex cursor-pointer items-center rounded-lg px-3 py-1 hover:bg-slate-100 dark:hover:bg-slate-700`}
+              onClick={() => setTheme("system")}
+            >
+              <RiComputerLine className="mr-2" />
+              <p
+                className={`${theme === "system" && "text-sky-500"} ${theme === "light" && "text-slate-700"} ${theme === "dark" && "text-slate-200"} text-sm font-semibold`}
+              >
+                System
+              </p>
+            </div>
+          </div>
         )}
-      </AnimatePresence>
-    </div>
+      </div>
+    </>
   );
 }

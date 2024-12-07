@@ -82,15 +82,8 @@ function extractTranscriptSegments(
 ): TranscriptSegment[] {
   return results.map((result, index) => {
     const alternative = result.alternatives[0];
-    
-    // Add logging to check the original transcript
-    console.log("Extracting segment:", {
-      originalTranscript: alternative.transcript,
-      language: result.languageCode,
-      index: index
-    });
-
     const transcriptSnippet = alternative.transcript;
+
     const firstWord = alternative.words[0];
     const lastWord = alternative.words[alternative.words.length - 1];
 
@@ -270,8 +263,6 @@ export async function POST(request: Request) {
       .map((result) => result.alternatives[0].transcript)
       .join(" ");
 
-    console.log("Original full transcript:", transcriptText);
-
     const transcriptEmbedding = await generateEmbedding(transcriptText);
 
     // Step 3: Create English version of transcript JSON
@@ -320,27 +311,13 @@ export async function POST(request: Request) {
       baseVideoURL,
     );
 
-    // Step 7: Add each transcript snippet to the 'video_snippets' index
+    // Step 7: Add each transcript snippet to the 'video_snippets' index with generated embeddings
     for (const segment of transcriptSegments) {
       const transcriptID = uuidv4();
-      
-      // Add logging before processing
-      console.log("Processing segment:", {
-        nepaliSnippet: segment.transcriptSnippet,
-        index: segment.transcriptSegmentIndex
-      });
-
       const snippetEmbedding = await generateEmbedding(
         segment.transcriptSnippet,
       );
       const englishSnippet = await translateText(segment.transcriptSnippet);
-
-      // Add logging after translation
-      console.log("After translation:", {
-        nepaliSnippet: segment.transcriptSnippet,
-        englishSnippet: englishSnippet,
-        index: segment.transcriptSegmentIndex
-      });
 
       await client.index({
         index: "video_snippets",
