@@ -10,6 +10,7 @@ async function setupIndices() {
         mappings: {
           properties: {
             vidID: { type: "keyword" },
+            vidTitle: { type: "text" },
             vidDescription: { type: "text" },
             uploadDate: { type: "date" },
             recordDate: { type: "date" },

@@ -3,12 +3,12 @@ import { analyzeQuery } from "@/utils-ts/analyzeQuery";
 import {
   searchVideos,
   searchSnippets,
-} from "../elasticsearch/search/keyword-search/route";
+} from "@/app/api/elasticsearch/search/keyword-search/route";
 import {
   semanticSearchVideos,
   semanticSearchSnippets,
-} from "../elasticsearch/search/semantic-search/route";
-import { combinedSearch } from "../elasticsearch/search/combined-search/route";
+} from "@/app/api/elasticsearch/search/semantic-search/route";
+import { combinedSearch } from "@/app/api/elasticsearch/search/combined-search/route";
 import client from "@/utils-ts/elasticsearch";
 
 // Base interface for shared properties
@@ -19,6 +19,7 @@ interface BaseDocument {
 
 interface VideoDocument extends BaseDocument {
   type: "video";
+  vidTitle: string;
   vidDescription: string;
   tags: string[];
   location?: string;
@@ -57,6 +58,7 @@ interface QueryAnalysis {
     uploadDate?: string;
     location?: string;
     tags?: string[];
+    vidID?: string;
   };
   keywords?: string[];
   queryEmbedding?: number[];
@@ -145,7 +147,7 @@ export async function GET(request: NextRequest) {
         const keywordResults =
           level === "video"
             ? await searchVideos({ keywords, ...searchParams })
-            : await searchSnippets({ keywords, from, size });
+            : await searchSnippets({ keywords, ...searchParams }); // Fixed: now passing searchParams with filters
         searchResults = addTypeToResults(
           keywordResults,
           level === "video" ? "video" : "snippet",
@@ -163,10 +165,7 @@ export async function GET(request: NextRequest) {
         const semanticResults =
           level === "video"
             ? await semanticSearchVideos(queryEmbedding, query, searchParams)
-            : await semanticSearchSnippets(queryEmbedding, query, {
-                from,
-                size,
-              });
+            : await semanticSearchSnippets(queryEmbedding, query, searchParams);
         searchResults = addTypeToResults(
           semanticResults,
           level === "video" ? "video" : "snippet",
