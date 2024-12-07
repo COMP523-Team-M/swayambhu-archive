@@ -49,13 +49,18 @@ export default function UploadForm() {
         "Content-Type": "application/json",
       },
       body: JSON.stringify(payload),
-    }).then(() => updateStatus(title, "Done"));
+    })
+      .then(() => updateStatus(title, "Done"))
+      .catch((error) => {
+        console.log(error);
+        updateStatus(title, "Error");
+      });
 
     // new Promise((resolve) => setTimeout(() => resolve("wow"), 5000)).then(() =>
     //   updateStatus(title, "Done"),
     // );
 
-    router.push("/dashboard");
+    // router.push("/dashboard");
   };
 
   const toBase64 = (file: File): Promise<string> => {

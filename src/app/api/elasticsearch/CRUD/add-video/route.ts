@@ -155,7 +155,7 @@ async function transcribeAudio(file: Buffer, name: string) {
   };
 
   const [operation] = await client.batchRecognize(transcriptionRequest);
-  console.log(await operation.promise());
+  console.log(operation);
 
   const [files] = await storage.bucket("test-speech123").getFiles({
     prefix: "transcripts/",
@@ -163,7 +163,7 @@ async function transcribeAudio(file: Buffer, name: string) {
 
   const transcriptFile = files.find(
     (file) =>
-      file.name.includes(file.name.split(".")[0]) &&
+      file.name.includes(name.split(".")[0]) &&
       file.name.includes("_transcript_"),
   );
 
@@ -174,8 +174,6 @@ async function transcribeAudio(file: Buffer, name: string) {
   const [fileContent] = await transcriptFile.download();
 
   const transcriptJson: TranscriptJson = JSON.parse(fileContent.toString());
-
-  console.log("Transcription result:", transcriptJson);
 
   return transcriptJson;
 }
@@ -232,6 +230,7 @@ export async function POST(request: Request) {
     }
 
     const fileBuffer = Buffer.from(audio.content, "base64");
+    console.log(fileBuffer);
     const transcriptJson = await transcribeAudio(fileBuffer, audio.name);
 
     if (!transcriptJson || !transcriptJson.results) {
