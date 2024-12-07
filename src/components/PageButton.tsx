@@ -1,104 +1,92 @@
 import React from 'react';
-import styles from './PageButton.module.css';  // Import CSS module
+import { motion } from 'framer-motion';
+import { FiChevronsLeft, FiChevronLeft, FiChevronRight, FiChevronsRight } from 'react-icons/fi';
 
-const PageButton = ({ howMany, total, curPage, setCurrentPage }) => {
-    const size = 5; // Maximum number of page links to display
-    const totalPage = Math.ceil(total / howMany);
-    const nextPage = curPage + 1;
-    const prePage = curPage - 1;
-    let pages = [];
+interface PageButtonProps {
+  howMany: number;
+  total: number;
+  curPage: number;
+  setCurrentPage: (page: number) => void;
+}
 
-    // Add first page link
-    if (totalPage > 0) {
-        pages.push(
-            <button
-                key="first"
-                onClick={() => setCurrentPage(1)}
-                className={`${styles['pagination-btn']} ${curPage === 1 ? styles.disabled : ''}`}
-            >
-                First Page
-            </button>
-        );
-    }
+const PageButton: React.FC<PageButtonProps> = ({ howMany, total, curPage, setCurrentPage }) => {
+  const size = 5;
+  const totalPage = Math.ceil(total / howMany);
+  const nextPage = curPage + 1;
+  const prePage = curPage - 1;
+  
+  const buttonVariants = {
+    hover: { scale: 1.05 },
+    tap: { scale: 0.95 }
+  };
 
-    // Add previous page link
-    if (prePage > 0) {
-        pages.push(
-            <button
-                key="previous"
-                onClick={() => setCurrentPage(prePage)}
-                className={`${styles['pagination-btn']} ${curPage === 1 ? styles.disabled : ''}`}
-            >
-                Previous Page
-            </button>
-        );
-    }
+  const renderPageButton = (pageNum: number | string, icon?: React.ReactNode) => (
+    <motion.button
+      variants={buttonVariants}
+      whileHover="hover"
+      whileTap="tap"
+      onClick={() => typeof pageNum === 'number' && setCurrentPage(pageNum)}
+      className={`
+        flex h-10 min-w-[40px] items-center justify-center gap-1 rounded-lg px-3 text-sm font-medium transition-all duration-200
+        ${typeof pageNum === 'number' && curPage === pageNum
+          ? 'bg-blue-500 text-white shadow-lg dark:bg-blue-600'
+          : 'bg-white/50 text-slate-700 shadow-sm hover:bg-white/80 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800/80'
+        }
+        ${typeof pageNum === 'number' && curPage === pageNum
+          ? ''
+          : 'hover:text-blue-500 dark:hover:text-blue-400'
+        }
+      `}
+      disabled={
+        (pageNum === 'First' && curPage === 1) ||
+        (pageNum === 'Last' && curPage === totalPage)
+      }
+    >
+      {icon}
+      <span>{pageNum}</span>
+    </motion.button>
+  );
 
-    // Middle page numbers
+  const renderPageNumbers = () => {
+    const pages = [];
+    
     if (totalPage <= size) {
-        for (let i = 1; i <= totalPage; i++) {
-            pages.push(
-                <button
-                    key={i}
-                    onClick={() => setCurrentPage(i)}
-                    className={`${styles['pagination-btn']} ${curPage === i ? styles.active : ''}`}
-                >
-                    {i}
-                </button>
-            );
-        }
+      for (let i = 1; i <= totalPage; i++) {
+        pages.push(renderPageButton(i));
+      }
     } else {
-        for (let i = curPage - Math.floor(size / 2), temp = curPage + size - Math.floor(size / 2); i < temp; i++) {
-            if (i <= 0) {
-                temp++;
-            } // Adjust if index is out of bounds
-            if (i > 0 && i <= totalPage) {
-                pages.push(
-                    <button
-                        key={i}
-                        onClick={() => setCurrentPage(i)}
-                        className={`${styles['pagination-btn']} ${curPage === i ? styles.active : ''}`}
-                    >
-                        {i}
-                    </button>
-                );
-            }
+      for (
+        let i = curPage - Math.floor(size / 2),
+        temp = curPage + size - Math.floor(size / 2);
+        i < temp;
+        i++
+      ) {
+        if (i <= 0) temp++;
+        if (i > 0 && i <= totalPage) {
+          pages.push(renderPageButton(i));
         }
+      }
     }
+    return pages;
+  };
 
-    // Add next page link
-    if (nextPage <= totalPage) {
-        pages.push(
-            <button
-                key="next"
-                onClick={() => setCurrentPage(nextPage)}
-                className={`${styles['pagination-btn']} ${curPage === totalPage ? styles.disabled : ''}`}
-            >
-                Next Page
-            </button>
-        );
-    }
-
-    // Add last page link
-    if (totalPage > 0) {
-        pages.push(
-            <button
-                key="last"
-                onClick={() => setCurrentPage(totalPage)}
-                className={`${styles['pagination-btn']} ${curPage === totalPage ? styles.disabled : ''}`}
-            >
-                Last Page
-            </button>
-        );
-    }
-
-    return (
-        <div className={styles['pagination-container']}>
-            {pages.map(function (item, index) {
-                return item;
-            })}
-        </div>
-    );
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="flex items-center gap-2 p-4"
+    >
+      {totalPage > 0 && (
+        <>
+          {renderPageButton('First', <FiChevronsLeft />)}
+          {prePage > 0 && renderPageButton('Prev', <FiChevronLeft />)}
+          {renderPageNumbers()}
+          {nextPage <= totalPage && renderPageButton('Next', <FiChevronRight />)}
+          {renderPageButton('Last', <FiChevronsRight />)}
+        </>
+      )}
+    </motion.div>
+  );
 };
 
 export default PageButton;
