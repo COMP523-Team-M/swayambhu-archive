@@ -60,7 +60,7 @@ export default function UploadForm() {
     //   updateStatus(title, "Done"),
     // );
 
-    // router.push("/dashboard");
+    router.push("/dashboard");
   };
 
   const toBase64 = (file: File): Promise<string> => {
