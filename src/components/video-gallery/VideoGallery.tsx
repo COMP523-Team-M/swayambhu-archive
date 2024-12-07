@@ -9,8 +9,10 @@ import Link from "next/link";
 import Image from "next/image";
 import useReactive from "@/hooks/useReactive";
 import GalleryIcons from "./GalleryIcons";
+import { useUploadContext } from "@/context/Uploads";
 
 const VideoGallery: React.FC = () => {
+  const { uploads } = useUploadContext();
   const router = useRouter(); // Initialize the router for navigation
 
   const handleButtonClick = () => {
@@ -46,7 +48,7 @@ const VideoGallery: React.FC = () => {
 
   useEffect(() => {
     getList();
-  }, []);
+  }, [uploads]);
 
   // 计算总页数
 
