@@ -3,11 +3,12 @@
 "use client";
 
 import React, { useEffect } from "react";
-import SearchBar from "./SearchBar";
+import SearchBar from "../SearchBar";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import useReactive from "@/hooks/useReactive";
+import GalleryIcons from "./GalleryIcons";
 
 const VideoGallery: React.FC = () => {
   const router = useRouter(); // Initialize the router for navigation
@@ -108,14 +109,17 @@ const VideoGallery: React.FC = () => {
       {/* Display Video Gallery */}
       <div className="flex flex-col items-center">
         {getCurrentPageData().map((video: any) => (
-          <div key={video.vidID} className="mb-5 flex border-b-2">
+          <div
+            key={video.vidID}
+            className="mb-5 flex border-b-2 last:border-b-0"
+          >
             <div className="mr-5 pb-5">
               <Image
                 src={`https://img.youtube.com/vi/${video.baseVideoURL.split("=")[1]}/0.jpg`}
                 alt="A video"
                 width={240}
                 height={135}
-                className="rounded-lg"
+                className="rounded-lg border-2 shadow-sm dark:border-slate-600"
                 priority={false}
                 unoptimized
               />
@@ -123,13 +127,18 @@ const VideoGallery: React.FC = () => {
             <div className="flex w-80 flex-col">
               <Link
                 href={`/video/${video.vidID}`}
-                className="cursor-pointer text-xl text-blue-600 hover:underline"
+                className="cursor-pointer text-xl text-sky-500 hover:underline dark:text-sky-400"
               >
-                {video.vidDescription}
+                {video.vidTitle}
               </Link>
 
-              <p>Description: {video.vidDescription}</p>
-              <p>More Information: {video.vidMoreInfo}</p>
+              <p className="text-slate-700 dark:text-slate-200">
+                {video.vidDescription}
+              </p>
+              <p className="text-slate-700 dark:text-slate-200">
+                {video.vidMoreInfo}
+              </p>
+              <GalleryIcons id={video.vidID} />
             </div>
           </div>
         ))}

@@ -1,5 +1,5 @@
-import React from 'react';
-import VideoGallery from "@/components/VideoGallery"; 
+import React from "react";
+import VideoGallery from "@/components/video-gallery/VideoGallery";
 
 export default function Home() {
   return (

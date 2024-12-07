@@ -46,7 +46,7 @@ export default function ThemeButton() {
             >
               <BsMoonStars className="mr-2" />
               <p
-                className={`${theme === "dark" && "text-sky-400"} text-sm font-semibold text-slate-700`}
+                className={`${theme === "dark" ? "text-sky-400" : "text-slate-700"} text-sm font-semibold`}
               >
                 Dark
               </p>

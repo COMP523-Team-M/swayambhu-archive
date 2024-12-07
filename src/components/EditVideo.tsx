@@ -2,44 +2,27 @@
 
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
+import { VideoData } from "@/app/api/elasticsearch/CRUD/get-video/route";
 
 export default function EditVideo() {
-  interface Line {
-    timestamp: string;
-    text: string;
-  }
-
-  interface Transcript {
-    results: Line[];
-  }
-
-  const line1: Line = { timestamp: "00:00", text: "Hello world" };
-  const line2: Line = {
-    timestamp: "00:10",
-    text: "The quick brown fox jumped over the lazy dog and then it decided to get some tacos later because it enjoys Mexican food in fact his best friend is Mexican how bout that? What are the odds you know small world right? lol well anyway xd memes",
-  };
-  const line3: Line = {
-    timestamp: "00:20",
-    text: "I think you should try getting a different job.",
-  };
-
-  const transcript: Transcript = { results: [line1, line2, line3] };
-
   const { id } = useParams();
   const router = useRouter();
 
-  const [input, setInput] = useState(
-    transcript.results.map((line) => line.text),
-  );
+  const [alert, setShowAlert] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [data, setData] = useState<VideoData | null>(null);
 
-  const handleChange = (
-    index: number,
-    e: React.ChangeEvent<HTMLTextAreaElement>,
-  ) => {
-    const newInput = [...input];
-    newInput[index] = e.target.value;
-    setInput(newInput);
+  const getVideo = async () => {
+    const response = await fetch(
+      `/api/elasticsearch/CRUD/get-video?vidID=${id}`,
+    );
+    const fetchedData: VideoData = await response.json();
+    setData(fetchedData);
   };
+
+  useEffect(() => {
+    getVideo();
+  }, []);
 
   const handleTextareaResize = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     e.target.style.height = "auto"; // Reset the height to auto so it can shrink
@@ -70,13 +53,20 @@ export default function EditVideo() {
       transcriptUpdates: transcriptionUpdates,
     };
 
-    fetch("http://localhost:3000/api/elasticsearch/CRUD/update-video", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    });
+    setUploading(true);
+    setShowAlert(true);
+    // fetch("http://localhost:3000/api/elasticsearch/CRUD/update-video", {
+    //   method: "PUT",
+    //   headers: { "Content-Type": "application/json" },
+    //   body: JSON.stringify(body),
+    // }).then(() => setShowAlert(true));
 
-    console.log(body);
+    new Promise((resolve) => setTimeout(() => resolve("yeet"), 3000)).then(
+      () => {
+        setUploading(false);
+        setTimeout(() => router.push("/dashboard"), 2000);
+      },
+    );
   };
 
   useEffect(() => {
@@ -85,7 +75,11 @@ export default function EditVideo() {
       textarea.style.height = "auto";
       textarea.style.height = `${textarea.scrollHeight}px`;
     });
-  }, []);
+  }, [data]);
+
+  if (!data) {
+    return <h1>Loading...</h1>;
+  }
 
   return (
     <>
@@ -99,6 +93,10 @@ export default function EditVideo() {
           placeholder="A nice video"
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
+          value={data.vidTitle}
+          onChange={(e) =>
+            setData((prevData) => ({ ...prevData!, vidTitle: e.target.value }))
+          }
           name="vidTitle"
         />
 
@@ -108,6 +106,13 @@ export default function EditVideo() {
           placeholder="Enter link"
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
+          value={data.baseVideoURL}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              baseVideoURL: e.target.value,
+            }))
+          }
           name="baseVideoURL"
         />
 
@@ -116,6 +121,13 @@ export default function EditVideo() {
           required
           placeholder="An interview about..."
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
+          value={data.vidDescription}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              vidDescription: e.target.value,
+            }))
+          }
           name="vidDescription"
         />
 
@@ -124,6 +136,13 @@ export default function EditVideo() {
           required
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="date"
+          value={data.uploadDate}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              uploadDate: e.target.value,
+            }))
+          }
           name="uploadDate"
         />
 
@@ -132,6 +151,13 @@ export default function EditVideo() {
           required
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="date"
+          value={data.recordDate}
+          onChange={(e) =>
+            setData((prevData) => ({
+              ...prevData!,
+              recordDate: e.target.value,
+            }))
+          }
           name="recordDate"
         />
 
@@ -141,6 +167,10 @@ export default function EditVideo() {
           placeholder="Nepal"
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
+          value={data.location}
+          onChange={(e) =>
+            setData((prevData) => ({ ...prevData!, location: e.target.value }))
+          }
           name="location"
         />
 
@@ -149,21 +179,40 @@ export default function EditVideo() {
           placeholder="Comma separated list (temple, tourist, monk)"
           className="mb-5 min-h-10 w-full rounded-lg p-1 px-2 text-sm shadow-md outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
           type="text"
+          value={data.tags ? data.tags.join(", ") : ""}
+          onChange={(e) => {
+            const tags = e.target.value.split(",").map((tag) => tag.trim());
+            setData((prevData) => ({ ...prevData!, tags: tags }));
+          }}
           name="tags"
         />
 
         <label className="mb-3 block">Transcript</label>
-        {transcript.results.map((line, index) => {
+        {data.englishTranscriptJson.results.map((line, index) => {
           return (
             <div className="flex" key={index}>
               <label className="mr-5 mt-1 w-10 text-sky-500 dark:text-sky-400">
-                {line.timestamp}
+                {data.transcriptJson.results[index].resultEndOffset}
               </label>
               <textarea
                 className="mb-3 min-h-5 w-full resize-none overflow-auto rounded-lg p-1 px-2 text-sm outline-none ring-[0.5px] ring-gray-400 transition-all duration-300 focus:ring-2 focus:ring-sky-300 dark:bg-slate-800 dark:text-slate-200 dark:ring-slate-600"
-                value={input[index]}
+                value={line.alternatives[0].transcript}
                 onChange={(e) => {
-                  handleChange(index, e);
+                  const newTranscript = e.target.value;
+
+                  setData((prevData) => {
+                    if (!prevData) return prevData; // Ensure prevData is not null
+
+                    // Create a copy of the existing data to update
+                    const updatedData = { ...prevData };
+
+                    // Update the specific transcript line
+                    updatedData.englishTranscriptJson.results[
+                      index
+                    ].alternatives[0].transcript = newTranscript;
+
+                    return updatedData;
+                  });
                   handleTextareaResize(e);
                 }}
                 name="transcriptUpdates"
@@ -186,6 +235,17 @@ export default function EditVideo() {
           </button>
         </div>
       </form>
+
+      {alert && (
+        <div
+          className="fixed bottom-5 rounded border border-slate-600 bg-slate-900 px-4 py-3 text-white"
+          role="alert"
+        >
+          <span className="block sm:inline">
+            {uploading ? "Updating video..." : "Video updated successfully"}
+          </span>
+        </div>
+      )}
     </>
   );
 }
