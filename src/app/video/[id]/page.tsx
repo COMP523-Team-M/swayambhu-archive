@@ -97,6 +97,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentMatchIndex, setCurrentMatchIndex] = useState<number>(-1);
   const [isAdvancedSearch, setIsAdvancedSearch] = useState<boolean>(false);
+
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showEnglish, setShowEnglish] = useState<boolean>(true);
@@ -310,14 +311,13 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                     <div className="relative flex-1">
                       <input
                         type="text"
-                        placeholder={isAdvancedSearch ? "Try semantic or natural language search..." : "Search transcript..."}
+                        placeholder="Search transcript..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="w-full rounded-lg border border-slate-200 bg-white/50 px-4 py-2 pl-10 text-slate-800 placeholder-slate-400 backdrop-blur-sm transition-all duration-300 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-slate-700 dark:bg-slate-800/50 dark:text-slate-200 dark:placeholder-slate-500"
                       />
                       <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500" />
                     </div>
-                    
                     <motion.button
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
@@ -327,42 +327,9 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                       <div className="absolute inset-0 bg-gradient-to-r from-slate-400/10 to-slate-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       <span className="relative">Clear</span>
                     </motion.button>
-                    
-                    <motion.button
-                      whileHover={{ scale: 1.05 }}
-                      whileTap={{ scale: 0.95 }}
-                      onClick={() => isAdvancedSearch ? performAdvancedSearch(searchTerm) : jumpToNextMatch()}
-                      className="group relative overflow-hidden rounded-lg bg-blue-500 px-4 py-2 text-white transition-all duration-300 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-blue-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-                      {isSearching ? (
-                        <span className="relative flex items-center gap-2">
-                          <svg className="h-4 w-4 animate-spin" viewBox="0 0 24 24">
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                          </svg>
-                          Searching...
-                        </span>
-                      ) : (
-                        <span className="relative">Search</span>
-                      )}
-                    </motion.button>
                   </div>
-                  
-                  <div className="flex items-center justify-between gap-2">
-                    <label className="relative inline-flex cursor-pointer items-center">
-                      <input
-                        type="checkbox"
-                        checked={isAdvancedSearch}
-                        onChange={(e) => setIsAdvancedSearch(e.target.checked)}
-                        className="peer sr-only"
-                      />
-                      <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
-                      <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
-                        Advanced Search
-                      </span>
-                    </label>
 
+                  <div className="flex items-center justify-between gap-2">
                     <label className="relative inline-flex cursor-pointer items-center">
                       <input
                         type="checkbox"
@@ -372,7 +339,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                       />
                       <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
                       <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {showEnglish ? "English" : "नेपाली"}
+                        {showEnglish ? "English" : "\u0928\u0947\u092a\u093e\u0932\u0940"}
                       </span>
                     </label>
                   </div>
@@ -388,13 +355,13 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                   {state.loading ? (
                     <TranscriptSkeleton />
                   ) : (
-                    state.transcript.map((entry: any, index: number) => (
+                    state.transcript.map((entry, index) => (
                       <motion.div
                         key={index}
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.3, delay: index * 0.05 }}
-                        ref={(el: any) => (transcriptRefs.current[index] = el)}
+                        ref={(el) => (transcriptRefs.current[index] = el)}
                         onClick={() => handleTranscriptClick(entry.time)}
                         className={`group cursor-pointer rounded-lg p-4 transition-all duration-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 scroll-mt-4 scroll-mb-4 ${
                           index === activeIndex
@@ -406,9 +373,11 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                           <FiClock className="h-4 w-4" />
                           <span>{entry.showTime}</span>
                         </div>
-                        <p className={`mt-2 text-slate-800 dark:text-slate-200 ${
-                          index === activeIndex ? "font-medium" : ""
-                        }`}>
+                        <p
+                          className={`mt-2 text-slate-800 dark:text-slate-200 ${
+                            index === activeIndex ? "font-medium" : ""
+                          }`}
+                        >
                           {showEnglish ? entry.eText : entry.aText}
                         </p>
                       </motion.div>
