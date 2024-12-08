@@ -11,11 +11,9 @@ export default async function handler(req, res) {
     // Log tokens to confirm they are received
     console.log("Tokens received and set:", tokens);
 
-    res
-      .status(200)
-      .json({
-        message: "Authentication successful! You can now upload videos.",
-      });
+    res.status(200).json({
+      message: "Authentication successful! You can now upload videos.",
+    });
   } catch (error) {
     console.error("Error during authentication:", error);
     res.status(500).json({ message: "Authentication failed" });

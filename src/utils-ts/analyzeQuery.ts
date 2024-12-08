@@ -1,5 +1,5 @@
-import { OpenAI } from 'openai';
-import { generateEmbedding } from './generateEmbeddings';
+import { OpenAI } from "openai";
+import { generateEmbedding } from "./generateEmbeddings";
 
 // Type definitions
 interface FilterableFields {
@@ -8,8 +8,8 @@ interface FilterableFields {
 }
 
 interface QueryAnalysis {
-  searchType: 'keyword' | 'semantic' | 'combined';
-  level: 'video' | 'snippet';
+  searchType: "keyword" | "semantic" | "combined";
+  level: "video" | "snippet";
   keywords?: string[];
   filters?: {
     uploadDate?: string;
@@ -19,8 +19,8 @@ interface QueryAnalysis {
 }
 
 interface SearchResult {
-  searchType: 'keyword' | 'semantic' | 'combined';
-  level: 'video' | 'snippet';
+  searchType: "keyword" | "semantic" | "combined";
+  level: "video" | "snippet";
   filters: {
     uploadDate?: string;
     location?: string;
@@ -31,8 +31,8 @@ interface SearchResult {
 
 // Constants
 const FILTERABLE_FIELDS: FilterableFields = {
-  video: ['uploadDate', 'location'],
-  snippet: ['uploadDate']  // Snippets don't have location field
+  video: ["uploadDate", "location"],
+  snippet: ["uploadDate"], // Snippets don't have location field
 };
 
 const openai = new OpenAI({
@@ -76,22 +76,22 @@ export async function analyzeQuery(query: string): Promise<SearchResult> {
       }
     `;
 
-    console.log('\nSending query to OpenAI for analysis...');
+    console.log("\nSending query to OpenAI for analysis...");
     const response = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [{ role: 'user', content: prompt }],
+      model: "gpt-3.5-turbo",
+      messages: [{ role: "user", content: prompt }],
       temperature: 0,
     });
 
     const content = response.choices[0].message.content;
-    if (!content) throw new Error('No response content from OpenAI');
+    if (!content) throw new Error("No response content from OpenAI");
     const result = JSON.parse(content) as QueryAnalysis;
-    console.log('OpenAI Analysis:', result.reasoning);
+    console.log("OpenAI Analysis:", result.reasoning);
 
     // Filter out fields that don't exist in the current index
     const validFilters: { uploadDate?: string; location?: string } = {};
     const allowedFields = FILTERABLE_FIELDS[result.level];
-    
+
     if (result.filters) {
       Object.entries(result.filters).forEach(([key, value]) => {
         if (allowedFields.includes(key)) {
@@ -101,28 +101,29 @@ export async function analyzeQuery(query: string): Promise<SearchResult> {
     }
 
     // Step 2: Validate and adjust the classification
-    const wordCount = query.split(' ').length;
+    const wordCount = query.split(" ").length;
     const hasQuestionWords = /^(what|where|when|how|why|who)\b/i.test(query);
-    
+
     // Override rules
-    if (hasQuestionWords && result.searchType === 'keyword') {
-      console.log('Overriding to semantic search due to question format');
-      result.searchType = 'semantic';
+    if (hasQuestionWords && result.searchType === "keyword") {
+      console.log("Overriding to semantic search due to question format");
+      result.searchType = "semantic";
     }
-    if (wordCount > 6 && result.searchType === 'keyword') {
-      console.log('Overriding to combined search due to query complexity');
-      result.searchType = 'combined';
+    if (wordCount > 6 && result.searchType === "keyword") {
+      console.log("Overriding to combined search due to query complexity");
+      result.searchType = "combined";
     }
 
     // Step 3: Generate embeddings for semantic/combined search
-    if (result.searchType === 'semantic' || result.searchType === 'combined') {
-      console.log('Generating embeddings for', result.searchType, 'search');
+    if (result.searchType === "semantic" || result.searchType === "combined") {
+      console.log("Generating embeddings for", result.searchType, "search");
       const queryEmbedding = await generateEmbedding(query);
       return {
         searchType: result.searchType,
         level: result.level,
         filters: validFilters,
-        keywords: result.searchType === 'combined' ? result.keywords : undefined,
+        keywords:
+          result.searchType === "combined" ? result.keywords : undefined,
         queryEmbedding,
       };
     }
@@ -134,9 +135,8 @@ export async function analyzeQuery(query: string): Promise<SearchResult> {
       filters: validFilters,
       keywords: result.keywords,
     };
-
   } catch (error) {
-    console.error('Error analyzing query:', error);
-    throw new Error('Failed to analyze query');
+    console.error("Error analyzing query:", error);
+    throw new Error("Failed to analyze query");
   }
 }
