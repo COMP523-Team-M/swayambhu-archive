@@ -39,7 +39,25 @@ export default function EditVideo() {
 
     console.log(data);
 
-    const transcription = form.getAll("transcriptUpdates") as string[];
+    const enTranscription = form.getAll("enTranscriptUpdates") as string[];
+    const neTranscription = form.getAll("neTranscriptUpdates") as string[];
+
+    const enString = enTranscription.join(" ");
+    const neString = neTranscription.join(" ");
+
+    console.log(enString);
+    console.log(neString);
+
+    let type: "english" | "nepali" | "both";
+    if (
+      enString !== data?.englishTranslation &&
+      neString !== data?.transcript
+    ) {
+      type = "both";
+    } else if (enString !== data?.englishTranslation) {
+      type = "english";
+    } else type = "nepali";
+
     const transcriptionUpdates = transcription.map((value, index) => ({
       segmentIndex: index,
       newTranscript: value,
@@ -288,20 +306,20 @@ export default function EditVideo() {
                 <textarea
                   className="min-h-fit w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
                   value={line.alternatives[0].transcript}
-                  // onChange={(e) => {
-                  //   const newTranscript = e.target.value;
-                  //   setData((prevData) => {
-                  //     if (!prevData) return prevData;
-                  //     const updatedData = { ...prevData };
-                  //     updatedData.englishTranscriptJson.results[
-                  //       index
-                  //     ].alternatives[0].transcript = newTranscript;
-                  //     return updatedData;
-                  //   });
-                  //   setChanged(true);
-                  //   handleTextareaResize(e);
-                  // }}
-                  name="transcriptUpdates"
+                  onChange={(e) => {
+                    const newTranscript = e.target.value;
+                    setData((prevData) => {
+                      if (!prevData) return prevData;
+                      const updatedData = { ...prevData };
+                      updatedData.englishTranscriptJson.results[
+                        index
+                      ].alternatives[0].transcript = newTranscript;
+                      return updatedData;
+                    });
+                    setChanged(true);
+                    handleTextareaResize(e);
+                  }}
+                  name="neTranscriptUpdates"
                 />
               </div>
             ))}
@@ -329,7 +347,7 @@ export default function EditVideo() {
                     setChanged(true);
                     handleTextareaResize(e);
                   }}
-                  name="transcriptUpdates"
+                  name="enTranscriptUpdates"
                 />
               </div>
             ))}

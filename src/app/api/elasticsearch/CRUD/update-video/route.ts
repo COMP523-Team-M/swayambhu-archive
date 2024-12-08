@@ -39,7 +39,12 @@ interface UpdateRequestBody {
   location?: string;
   tags?: string[];
   baseVideoURL?: string;
-  transcriptUpdates?: {
+  updateType?: "english" | "nepali" | "both";
+  transcriptEnUpdates?: {
+    segmentIndex: number;
+    newTranscript: string;
+  }[];
+  transcriptNeUpdates?: {
     segmentIndex: number;
     newTranscript: string;
   }[];
@@ -98,7 +103,13 @@ export async function PUT(request: NextRequest) {
 
   try {
     const body: UpdateRequestBody = await request.json();
-    const { vidID, transcriptUpdates, ...metadataUpdates } = body;
+    const {
+      vidID,
+      updateType,
+      transcriptEnUpdates,
+      transcriptNeUpdates,
+      ...metadataUpdates
+    } = body;
 
     const response = await client.get({
       index: "videos",
@@ -121,86 +132,203 @@ export async function PUT(request: NextRequest) {
       doc: { ...metadataUpdates },
     };
 
-    if (transcriptUpdates && transcriptUpdates.length > 0) {
-      const transcriptJson = { ...currentVideo.transcriptJson };
+    const assignEnglishUpdate = () => {
+      if (transcriptEnUpdates && transcriptEnUpdates.length > 0) {
+        const englishTranscript = { ...currentVideo.englishTranscriptJson };
 
-      for (const update of transcriptUpdates) {
-        transcriptJson.results[update.segmentIndex].alternatives[0].transcript =
-          update.newTranscript;
+        for (const update of transcriptEnUpdates) {
+          englishTranscript.results[
+            update.segmentIndex
+          ].alternatives[0].transcript = update.newTranscript;
+        }
+
+        return englishTranscript;
       }
+    };
 
-      const transcriptText = transcriptJson.results
-        .map((result: TranscriptResult) => result.alternatives[0].transcript)
-        .join(" ");
+    const assignNepaliUpdate = async () => {
+      if (transcriptNeUpdates && transcriptNeUpdates.length > 0) {
+        const nepaliTranscript = { ...currentVideo.transcriptJson };
 
-      const transcriptEmbedding = await generateEmbedding(transcriptText);
-      const englishTranscript = await translateText(transcriptText);
+        for (const update of transcriptNeUpdates) {
+          nepaliTranscript.results[
+            update.segmentIndex
+          ].alternatives[0].transcript = update.newTranscript;
+        }
 
-      const englishTranscriptJson: TranscriptJson = {
-        results: await Promise.all(
-          transcriptJson.results.map(async (result: TranscriptResult) => ({
-            alternatives: [
-              {
-                ...result.alternatives[0],
-                transcript: await translateText(
-                  result.alternatives[0].transcript,
-                ),
-              },
-            ],
-          })),
-        ),
+        const transcriptText = nepaliTranscript?.results
+          .map((result: TranscriptResult) => result.alternatives[0].transcript)
+          .join(" ");
+
+        const transcriptEmbedding = await generateEmbedding(transcriptText);
+
+        return {
+          transcriptEmbedding: transcriptEmbedding,
+          transcriptText: transcriptText,
+          nepaliTranscript: nepaliTranscript,
+        };
+      }
+      return {
+        transcriptEmbedding: undefined,
+        transcriptText: undefined,
+        nepaliTranscript: undefined,
       };
+    };
 
-      updateBody.doc = {
-        ...updateBody.doc,
-        transcriptJson,
-        englishTranscriptJson,
-        transcript: transcriptText,
-        englishTranslation: englishTranscript,
-        transcriptEmbedding,
-      };
+    let transcriptJson: TranscriptJson = currentVideo.transcriptJson;
+    switch (updateType) {
+      case "english": {
+        const englishTranscript = assignEnglishUpdate();
+        const translation = englishTranscript?.results
+          .map((result: TranscriptResult) => result.alternatives[0].transcript)
+          .join(" ");
 
-      await client.deleteByQuery({
+        updateBody.doc = {
+          ...updateBody.doc,
+          transcriptJson: currentVideo.transcriptJson,
+          englishTranscriptJson: englishTranscript,
+          transcript: currentVideo.transcript,
+          englishTranslation: translation,
+          transcriptEmbedding: currentVideo.transcriptEmbedding,
+        };
+        break;
+      }
+      case "both": {
+        const englishTranscript = assignEnglishUpdate();
+        const { transcriptEmbedding, transcriptText, nepaliTranscript } =
+          await assignNepaliUpdate();
+        const translation = englishTranscript?.results
+          .map((result: TranscriptResult) => result.alternatives[0].transcript)
+          .join(" ");
+
+        updateBody.doc = {
+          ...updateBody.doc,
+          transcriptJson: nepaliTranscript,
+          englishTranscriptJson: englishTranscript,
+          transcript: transcriptText,
+          englishTranslation: translation,
+          transcriptEmbedding,
+        };
+        if (nepaliTranscript) transcriptJson = nepaliTranscript;
+        break;
+      }
+      case "nepali": {
+        const { transcriptEmbedding, transcriptText, nepaliTranscript } =
+          await assignNepaliUpdate();
+
+        if (transcriptEmbedding && transcriptText && nepaliTranscript) {
+          const englishTranscript = await translateText(transcriptText);
+
+          const englishTranscriptJson: TranscriptJson = {
+            results: await Promise.all(
+              nepaliTranscript.results.map(
+                async (result: TranscriptResult) => ({
+                  alternatives: [
+                    {
+                      ...result.alternatives[0],
+                      transcript: await translateText(
+                        result.alternatives[0].transcript,
+                      ),
+                    },
+                  ],
+                }),
+              ),
+            ),
+          };
+
+          updateBody.doc = {
+            ...updateBody.doc,
+            transcriptJson: nepaliTranscript,
+            englishTranscriptJson,
+            transcript: transcriptText,
+            englishTranslation: englishTranscript,
+            transcriptEmbedding,
+          };
+        }
+        if (nepaliTranscript) transcriptJson = nepaliTranscript;
+        break;
+      }
+    }
+
+    // if (transcriptUpdates && transcriptUpdates.length > 0) {
+    //   const transcriptJson = { ...currentVideo.transcriptJson };
+
+    //   for (const update of transcriptUpdates) {
+    //     transcriptJson.results[update.segmentIndex].alternatives[0].transcript =
+    //       update.newTranscript;
+    //   }
+
+    //   const transcriptText = transcriptJson.results
+    //     .map((result: TranscriptResult) => result.alternatives[0].transcript)
+    //     .join(" ");
+
+    //   const transcriptEmbedding = await generateEmbedding(transcriptText);
+    //   const englishTranscript = await translateText(transcriptText);
+
+    //   const englishTranscriptJson: TranscriptJson = {
+    //     results: await Promise.all(
+    //       transcriptJson.results.map(async (result: TranscriptResult) => ({
+    //         alternatives: [
+    //           {
+    //             ...result.alternatives[0],
+    //             transcript: await translateText(
+    //               result.alternatives[0].transcript,
+    //             ),
+    //           },
+    //         ],
+    //       })),
+    //     ),
+    //   };
+
+    //   updateBody.doc = {
+    //     ...updateBody.doc,
+    //     transcriptJson,
+    //     englishTranscriptJson,
+    //     transcript: transcriptText,
+    //     englishTranslation: englishTranscript,
+    //     transcriptEmbedding,
+    //   };
+
+    await client.deleteByQuery({
+      index: "video_snippets",
+      body: {
+        query: {
+          match: { vidID },
+        },
+      },
+    });
+
+    for (let i = 0; i < transcriptJson.results.length; i++) {
+      const result: TranscriptResult = transcriptJson.results[i];
+      const transcriptID = uuidv4();
+      const transcriptSnippet = result.alternatives[0].transcript;
+
+      const snippetEmbedding = await generateEmbedding(transcriptSnippet);
+      const englishSnippet = await translateText(transcriptSnippet);
+
+      const firstWord = result.alternatives[0].words[0];
+      const lastWord =
+        result.alternatives[0].words[result.alternatives[0].words.length - 1];
+      const startTime = convertTimeToSeconds(
+        firstWord.startOffset || firstWord.endOffset,
+      );
+      const endTime = convertTimeToSeconds(lastWord.endOffset);
+      const videoLinkToSnippet = `${currentVideo.baseVideoURL}&t=${startTime}s`;
+
+      await client.index({
         index: "video_snippets",
+        id: transcriptID,
         body: {
-          query: {
-            match: { vidID },
-          },
+          transcriptID,
+          vidID,
+          timeSegment: startTime,
+          endTime,
+          transcriptSnippet,
+          englishTranslation: englishSnippet,
+          videoLinkToSnippet,
+          snippetEmbedding,
         },
       });
-
-      for (let i = 0; i < transcriptJson.results.length; i++) {
-        const result: TranscriptResult = transcriptJson.results[i];
-        const transcriptID = uuidv4();
-        const transcriptSnippet = result.alternatives[0].transcript;
-
-        const snippetEmbedding = await generateEmbedding(transcriptSnippet);
-        const englishSnippet = await translateText(transcriptSnippet);
-
-        const firstWord = result.alternatives[0].words[0];
-        const lastWord =
-          result.alternatives[0].words[result.alternatives[0].words.length - 1];
-        const startTime = convertTimeToSeconds(
-          firstWord.startOffset || firstWord.endOffset,
-        );
-        const endTime = convertTimeToSeconds(lastWord.endOffset);
-        const videoLinkToSnippet = `${currentVideo.baseVideoURL}&t=${startTime}s`;
-
-        await client.index({
-          index: "video_snippets",
-          id: transcriptID,
-          body: {
-            transcriptID,
-            vidID,
-            timeSegment: startTime,
-            endTime,
-            transcriptSnippet,
-            englishTranslation: englishSnippet,
-            videoLinkToSnippet,
-            snippetEmbedding,
-          },
-        });
-      }
     }
 
     await client.update({
