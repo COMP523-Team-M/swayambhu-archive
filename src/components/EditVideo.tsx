@@ -14,6 +14,7 @@ export default function EditVideo() {
   const [uploading, setUploading] = useState(false);
   const [changed, setChanged] = useState(false);
   const [data, setData] = useState<VideoData | null>(null);
+  const [showEnglish, setShowEnglish] = useState(true);
 
   useEffect(() => {
     const getVideo = async () => {
@@ -22,6 +23,7 @@ export default function EditVideo() {
       );
       const fetchedData: VideoData = await response.json();
       setData(fetchedData);
+      console.log(fetchedData);
     };
     getVideo();
   }, [id]);
@@ -40,6 +42,8 @@ export default function EditVideo() {
       segmentIndex: index,
       newTranscript: value,
     }));
+
+    console.log(transcriptionUpdates);
 
     const body = {
       vidID: id,
@@ -160,7 +164,7 @@ export default function EditVideo() {
           <textarea
             required
             placeholder="An interview about..."
-            className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-all duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700 dark:placeholder:text-slate-600"
+            className="min-h-fit w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-colors duration-300 placeholder:text-slate-400 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700 dark:placeholder:text-slate-600"
             value={data.vidDescription}
             onChange={(e) => {
               setData((prevData) => ({
@@ -256,34 +260,78 @@ export default function EditVideo() {
         </div>
 
         <div className="space-y-4">
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
-            Transcript
-          </label>
-          {data.englishTranscriptJson.results.map((line, index) => (
-            <div className="flex gap-4" key={index}>
-              <span className="mt-3 w-16 text-sm font-medium text-blue-500">
-                {data.transcriptJson.results[index].resultEndOffset}
-              </span>
-              <textarea
-                className="w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
-                value={line.alternatives[0].transcript}
-                onChange={(e) => {
-                  const newTranscript = e.target.value;
-                  setData((prevData) => {
-                    if (!prevData) return prevData;
-                    const updatedData = { ...prevData };
-                    updatedData.englishTranscriptJson.results[
-                      index
-                    ].alternatives[0].transcript = newTranscript;
-                    return updatedData;
-                  });
-                  setChanged(true);
-                  handleTextareaResize(e);
-                }}
-                name="transcriptUpdates"
+          <div className="flex justify-between">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">
+              Transcript
+            </label>
+            <label className="relative inline-flex cursor-pointer items-center">
+              <input
+                type="checkbox"
+                checked={showEnglish}
+                onChange={(e) => setShowEnglish(e.target.checked)}
+                className="peer sr-only"
               />
-            </div>
-          ))}
+              <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
+              <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
+                {showEnglish ? "English" : "नेपाली"}
+              </span>
+            </label>
+          </div>
+          <div className={`${!showEnglish && "hidden"} flex flex-col gap-4`}>
+            {data.englishTranscriptJson.results.map((line, index) => (
+              <div className="flex gap-4" key={index}>
+                <span className="mt-3 w-16 text-sm font-medium text-blue-500">
+                  {data.transcriptJson.results[index].resultEndOffset}
+                </span>
+                <textarea
+                  className="min-h-fit w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
+                  value={line.alternatives[0].transcript}
+                  onChange={(e) => {
+                    const newTranscript = e.target.value;
+                    setData((prevData) => {
+                      if (!prevData) return prevData;
+                      const updatedData = { ...prevData };
+                      updatedData.englishTranscriptJson.results[
+                        index
+                      ].alternatives[0].transcript = newTranscript;
+                      return updatedData;
+                    });
+                    setChanged(true);
+                    handleTextareaResize(e);
+                  }}
+                  name="transcriptUpdates"
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className={`${showEnglish && "hidden"} flex flex-col gap-4`}>
+            {data.transcriptJson.results.map((line, index) => (
+              <div className="flex gap-4" key={index}>
+                <span className="mt-3 w-16 text-sm font-medium text-blue-500">
+                  {line.resultEndOffset}
+                </span>
+                <textarea
+                  className="min-h-fit w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
+                  value={line.alternatives[0].transcript}
+                  onChange={(e) => {
+                    const newTranscript = e.target.value;
+                    setData((prevData) => {
+                      if (!prevData) return prevData;
+                      const updatedData = { ...prevData };
+                      updatedData.transcriptJson.results[
+                        index
+                      ].alternatives[0].transcript = newTranscript;
+                      return updatedData;
+                    });
+                    setChanged(true);
+                    handleTextareaResize(e);
+                  }}
+                  name="transcriptUpdates"
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         <div className="mt-8 flex justify-between gap-4">
