@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
@@ -128,11 +129,11 @@ const SearchResultCard = ({
         </div>
 
         <div className="flex-grow space-y-4">
-          <Link href={`/video/${result.vidID}${timestamp}`}>
+          <Link href={`/video/${result.vidID}`}>
             <h2 className="font-outfit text-xl font-semibold text-slate-800 transition-colors duration-300 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400">
               {isSnippet
-                ? `Relevant Segment from Video ${result.vidID}`
-                : result.vidTitle || `Video ${result.vidID}`}
+                ? `Relevant Segment from Video ${result.vidTitle}`
+                : result.vidTitle || `Video ${result.vidTitle}`}
             </h2>
           </Link>
 
