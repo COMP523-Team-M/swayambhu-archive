@@ -17,14 +17,10 @@ export default function UploadList() {
     >
       {/* Gradient background effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-xl" />
-      
+
       <div className="relative flex min-h-96 w-80 flex-col overflow-hidden rounded-3xl bg-white/80 p-8 shadow-xl backdrop-blur-xl transition-all duration-500 hover:shadow-2xl dark:bg-slate-800/80">
         {/* Header */}
-        <motion.div 
-          initial={{ y: -20 }}
-          animate={{ y: 0 }}
-          className="mb-6"
-        >
+        <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="mb-6">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-700">
             <div className="flex items-center gap-2">
               <FiUploadCloud className="h-6 w-6 text-blue-500 dark:text-blue-400" />
@@ -47,10 +43,7 @@ export default function UploadList() {
                 exit={{ opacity: 0, x: 20 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <UploadItem
-                  title={upload.title}
-                  status={upload.status}
-                />
+                <UploadItem title={upload.title} status={upload.status} />
               </motion.div>
             ))}
           </div>
@@ -58,7 +51,7 @@ export default function UploadList() {
 
         {/* Empty state */}
         {uploads.length === 0 && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="flex flex-1 flex-col items-center justify-center text-slate-400"

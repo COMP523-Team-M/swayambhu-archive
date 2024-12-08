@@ -1,10 +1,13 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import useReactive from "@/hooks/useReactive";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
-import { FiArrowLeft, FiSearch, FiX, FiClock } from "react-icons/fi";
+import { FiArrowLeft, FiSearch, FiClock } from "react-icons/fi";
 
 interface VideoPageProps {
   params: {
@@ -17,7 +20,7 @@ const ProgressBar = () => {
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
 
   return (
@@ -67,8 +70,8 @@ const dataHandler = (data: any) => {
 const TranscriptSkeleton = () => (
   <div className="space-y-4">
     {[1, 2, 3, 4].map((i) => (
-      <div 
-        key={i} 
+      <div
+        key={i}
         className="relative overflow-hidden rounded-lg bg-white/50 p-4 backdrop-blur-lg transition-all duration-500 dark:bg-slate-800/50"
       >
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -101,7 +104,7 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showEnglish, setShowEnglish] = useState<boolean>(true);
-  
+
   const transcriptRefs = useRef<HTMLDivElement[]>([]);
   const transcriptContainerRef = useRef<HTMLDivElement>(null);
 
@@ -114,35 +117,35 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
       state.transcript = dataHandler(state.selectedVideo);
 
       const videoUrl = state.selectedVideo?.baseVideoURL;
-      const videoId = videoUrl?.includes('watch?v=') 
-        ? videoUrl.split('watch?v=')[1]
-        : videoUrl?.split('youtu.be/')[1];
+      const videoId = videoUrl?.includes("watch?v=")
+        ? videoUrl.split("watch?v=")[1]
+        : videoUrl?.split("youtu.be/")[1];
 
-      const container = document.getElementById('youtube-player');
+      const container = document.getElementById("youtube-player");
       if (container) {
-        container.innerHTML = '';
-        
-        const playerDiv = document.createElement('div');
-        playerDiv.id = 'yt-player';
+        container.innerHTML = "";
+
+        const playerDiv = document.createElement("div");
+        playerDiv.id = "yt-player";
         container.appendChild(playerDiv);
 
         if (!(window as any).YT) {
-          const tag = document.createElement('script');
-          tag.src = 'https://www.youtube.com/iframe_api';
-          const firstScriptTag = document.getElementsByTagName('script')[0];
+          const tag = document.createElement("script");
+          tag.src = "https://www.youtube.com/iframe_api";
+          const firstScriptTag = document.getElementsByTagName("script")[0];
           firstScriptTag.parentNode?.insertBefore(tag, firstScriptTag);
         }
 
         (window as any).onYouTubeIframeAPIReady = () => {
-          const newPlayer = new (window as any).YT.Player('yt-player', {
+          const newPlayer = new (window as any).YT.Player("yt-player", {
             videoId: videoId,
-            height: '100%',
-            width: '100%',
+            height: "100%",
+            width: "100%",
             playerVars: {
               autoplay: 0,
               modestbranding: 1,
               rel: 0,
-              enablejsapi: 1
+              enablejsapi: 1,
             },
             events: {
               onReady: (event: any) => {
@@ -150,17 +153,16 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                 state.loading = false;
               },
               onStateChange: (event: any) => {
-                console.log('Player state changed:', event.data);
+                console.log("Player state changed:", event.data);
               },
               onError: (error: any) => {
-                console.error('YouTube Player Error:', error);
+                console.error("YouTube Player Error:", error);
                 state.loading = false;
-              }
-            }
+              },
+            },
           });
         };
       }
-
     } catch (error) {
       console.error("Error loading video:", error);
       state.loading = false;
@@ -196,15 +198,15 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
       (entry: any, i: number) =>
         entry.time <= currentTime &&
         (i === state.transcript.length - 1 ||
-          state.transcript[i + 1].time > currentTime)
+          state.transcript[i + 1].time > currentTime),
     );
 
     setActiveIndex(activeIdx);
 
     if (activeIdx >= 0 && transcriptRefs.current[activeIdx]) {
-      transcriptRefs.current[activeIdx].scrollIntoView({ 
-        behavior: "smooth", 
-        block: "nearest" 
+      transcriptRefs.current[activeIdx].scrollIntoView({
+        behavior: "smooth",
+        block: "nearest",
       });
     }
   }, [currentTime, state.loading]);
@@ -216,16 +218,18 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
 
   const performAdvancedSearch = async (query: string) => {
     if (!query.trim()) return;
-    
+
     setIsSearching(true);
     try {
-      const res = await fetch(`/api/elasticsearch/search?query=${encodeURIComponent(query)}&filters[vidID]=${id}`);
+      const res = await fetch(
+        `/api/elasticsearch/search?query=${encodeURIComponent(query)}&filters[vidID]=${id}`,
+      );
       const data = await res.json();
-      
+
       if (data.results && data.results.length > 0) {
         setSearchResults(data.results);
-        
-        if (data.metadata.level === 'snippet' && data.results[0].time) {
+
+        if (data.metadata.level === "snippet" && data.results[0].time) {
           handleTranscriptClick(data.results[0].time);
         }
       } else {
@@ -245,11 +249,12 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
       const filtered = state.transcript.filter(
         (entry: any) =>
           entry.eText.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          entry.aText.toLowerCase().includes(searchTerm.toLowerCase())
+          entry.aText.toLowerCase().includes(searchTerm.toLowerCase()),
       );
 
       if (filtered.length > 0) {
-        const nextIndex = currentMatchIndex + 1 < filtered.length ? currentMatchIndex + 1 : 0;
+        const nextIndex =
+          currentMatchIndex + 1 < filtered.length ? currentMatchIndex + 1 : 0;
         setCurrentMatchIndex(nextIndex);
         handleTranscriptClick(filtered[nextIndex].time);
       } else {
@@ -327,6 +332,41 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                       <div className="absolute inset-0 bg-gradient-to-r from-slate-400/10 to-slate-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       <span className="relative">Clear</span>
                     </motion.button>
+
+                    <motion.button
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => jumpToNextMatch()}
+                      className="group relative overflow-hidden rounded-lg bg-blue-500 px-4 py-2 text-white transition-all duration-300 hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-blue-400/10 to-blue-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+                      {isSearching ? (
+                        <span className="relative flex items-center gap-2">
+                          <svg
+                            className="h-4 w-4 animate-spin"
+                            viewBox="0 0 24 24"
+                          >
+                            <circle
+                              className="opacity-25"
+                              cx="12"
+                              cy="12"
+                              r="10"
+                              stroke="currentColor"
+                              strokeWidth="4"
+                              fill="none"
+                            />
+                            <path
+                              className="opacity-75"
+                              fill="currentColor"
+                              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                            />
+                          </svg>
+                          Searching...
+                        </span>
+                      ) : (
+                        <span className="relative">Search</span>
+                      )}
+                    </motion.button>
                   </div>
 
                   <div className="flex items-center justify-between gap-2">
@@ -339,7 +379,9 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                       />
                       <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 dark:border-gray-600 dark:bg-slate-700 dark:peer-focus:ring-blue-800"></div>
                       <span className="ml-3 text-sm font-medium text-slate-700 dark:text-slate-300">
-                        {showEnglish ? "English" : "\u0928\u0947\u092a\u093e\u0932\u0940"}
+                        {showEnglish
+                          ? "English"
+                          : "\u0928\u0947\u092a\u093e\u0932\u0940"}
                       </span>
                     </label>
                   </div>
@@ -355,33 +397,43 @@ const VideoPage: React.FC<VideoPageProps> = ({ params }) => {
                   {state.loading ? (
                     <TranscriptSkeleton />
                   ) : (
-                    state.transcript.map((entry, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, y: 20 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        transition={{ duration: 0.3, delay: index * 0.05 }}
-                        ref={(el) => (transcriptRefs.current[index] = el)}
-                        onClick={() => handleTranscriptClick(entry.time)}
-                        className={`group cursor-pointer rounded-lg p-4 transition-all duration-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 scroll-mt-4 scroll-mb-4 ${
-                          index === activeIndex
-                            ? "bg-blue-500/10 dark:bg-blue-500/20"
-                            : ""
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400">
-                          <FiClock className="h-4 w-4" />
-                          <span>{entry.showTime}</span>
-                        </div>
-                        <p
-                          className={`mt-2 text-slate-800 dark:text-slate-200 ${
-                            index === activeIndex ? "font-medium" : ""
+                    state.transcript.map(
+                      (
+                        entry: {
+                          time: string;
+                          showTime: string;
+                          eText: string;
+                          aText: string;
+                        },
+                        index: number,
+                      ) => (
+                        <motion.div
+                          key={index}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.05 }}
+                          // ref={(el) => (transcriptRefs.current[index] = el)}
+                          onClick={() => handleTranscriptClick(entry.time)}
+                          className={`group cursor-pointer scroll-mb-4 scroll-mt-4 rounded-lg p-4 transition-all duration-300 hover:bg-slate-100/80 dark:hover:bg-slate-700/80 ${
+                            index === activeIndex
+                              ? "bg-blue-500/10 dark:bg-blue-500/20"
+                              : ""
                           }`}
                         >
-                          {showEnglish ? entry.eText : entry.aText}
-                        </p>
-                      </motion.div>
-                    ))
+                          <div className="flex items-center gap-2 text-sm text-blue-500 dark:text-blue-400">
+                            <FiClock className="h-4 w-4" />
+                            <span>{entry.showTime}</span>
+                          </div>
+                          <p
+                            className={`mt-2 text-slate-800 dark:text-slate-200 ${
+                              index === activeIndex ? "font-medium" : ""
+                            }`}
+                          >
+                            {showEnglish ? entry.eText : entry.aText}
+                          </p>
+                        </motion.div>
+                      ),
+                    )
                   )}
                 </AnimatePresence>
               </div>

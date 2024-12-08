@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import client from "@/utils-ts/elasticsearch";
 
@@ -83,7 +84,7 @@ export async function searchVideos({
   const { uploadDate, location, tags, vidID } = filters;
   const searchField = determineSearchField(keywords);
   const keywordString = Array.isArray(keywords) ? keywords.join(" ") : keywords;
-  console.log(`keywordString ->:`, keywordString)
+  console.log(`keywordString ->:`, keywordString);
 
   const filterArray: any[] = [];
 

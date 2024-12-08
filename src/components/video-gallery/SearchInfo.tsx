@@ -45,19 +45,19 @@ export default function SearchInfo() {
                 <span className="rounded-full bg-blue-500/10 px-2 py-1 text-xs text-blue-400">
                   EN
                 </span>
-                "temples in Kathmandu"
+                &quot;temples in Kathmandu&quot;
               </li>
               <li className="flex items-center gap-2 dark:text-slate-300">
                 <span className="rounded-full bg-blue-500/10 px-2 py-1 text-xs text-blue-400">
                   NE
                 </span>
-                "नेवारी परम्परा"
+                &quot;नेवारी परम्परा&quot;
               </li>
               <li className="flex items-center gap-2 dark:text-slate-300">
                 <span className="rounded-full bg-purple-500/10 px-2 py-1 text-xs text-purple-400">
                   MIX
                 </span>
-                "traditional पूजा ceremonies in Bhaktapur"
+                &quot;traditional पूजा ceremonies in Bhaktapur&quot;
               </li>
             </ul>
           </div>
@@ -71,20 +71,22 @@ export default function SearchInfo() {
                 <span className="rounded-full bg-purple-500/10 px-2 py-1 text-xs text-purple-400">
                   VIDEO
                 </span>
-                "show me all videos about Buddhist monasteries in Nepal"
+                &quot;show me all videos about Buddhist monasteries in
+                Nepal&quot;
               </li>
               <li className="flex items-center gap-2 dark:text-slate-300">
                 <span className="rounded-full bg-blue-500/10 px-2 py-1 text-xs text-blue-400">
                   SEGMENT
                 </span>
-                "find moments where they explain the meaning of butter lamp
-                offerings"
+                &quot;find moments where they explain the meaning of butter lamp
+                offerings&quot;
               </li>
               <li className="flex items-center gap-2 dark:text-slate-300">
                 <span className="rounded-full bg-blue-500/10 px-2 py-1 text-xs text-blue-400">
                   SEGMENT
                 </span>
-                "show me clips about cultural preservation efforts in पशुपतिनाथ"
+                &quot;show me clips about cultural preservation efforts in
+                पशुपतिनाथ&quot;
               </li>
             </ul>
           </div>

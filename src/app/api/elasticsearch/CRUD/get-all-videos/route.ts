@@ -1,22 +1,6 @@
 import { NextResponse } from "next/server";
 import client from "@/utils-ts/elasticsearch";
 
-interface VideoData {
-  vidID: string;
-  vidTitle: string;
-  vidDescription: string;
-  uploadDate: string;
-  recordDate: string;
-  location: string;
-  transcript: string;
-  englishTranslation: string;
-  tags: string[];
-  baseVideoURL: string;
-  transcriptJson: any;
-  englishTranscriptJson: any;
-  transcriptEmbedding: number[];
-}
-
 export async function GET() {
   try {
     const response = await client.search({

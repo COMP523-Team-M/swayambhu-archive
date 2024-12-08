@@ -23,7 +23,7 @@ export default function SearchBar({
   };
 
   return (
-    <motion.form 
+    <motion.form
       className="relative mx-auto mb-4 w-4/5"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -32,12 +32,14 @@ export default function SearchBar({
     >
       <div className="group relative">
         <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-pink-500/20 opacity-0 blur-xl transition-opacity duration-500 group-hover:opacity-100" />
-        
-        <div className={`relative flex items-center overflow-hidden rounded-2xl bg-white/80 shadow-lg backdrop-blur-xl transition-all duration-300 dark:bg-slate-800/80 ${
-          isFocused 
-            ? 'ring-2 ring-blue-500/50 dark:ring-blue-400/50' 
-            : 'ring-1 ring-slate-200/50 dark:ring-slate-700/50'
-        }`}>
+
+        <div
+          className={`relative flex items-center overflow-hidden rounded-2xl bg-white/80 shadow-lg backdrop-blur-xl transition-all duration-300 dark:bg-slate-800/80 ${
+            isFocused
+              ? "ring-2 ring-blue-500/50 dark:ring-blue-400/50"
+              : "ring-1 ring-slate-200/50 dark:ring-slate-700/50"
+          }`}
+        >
           <motion.div
             animate={{
               x: isFocused ? 5 : 0,
@@ -46,11 +48,13 @@ export default function SearchBar({
             transition={{ duration: 0.2 }}
             className="pointer-events-none absolute ml-4"
           >
-            <FiSearch className={`h-5 w-5 transition-colors duration-300 ${
-              isFocused 
-                ? 'text-blue-500 dark:text-blue-400' 
-                : 'text-slate-400 dark:text-slate-500'
-            }`} />
+            <FiSearch
+              className={`h-5 w-5 transition-colors duration-300 ${
+                isFocused
+                  ? "text-blue-500 dark:text-blue-400"
+                  : "text-slate-400 dark:text-slate-500"
+              }`}
+            />
           </motion.div>
 
           <input

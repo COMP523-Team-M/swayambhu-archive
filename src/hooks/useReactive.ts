@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState } from "react";
 
 const baseHandler = {
   get(target: any, key: PropertyKey) {
