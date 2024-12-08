@@ -1,13 +1,14 @@
 "use client";
 
-import React, { useEffect, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import React, { useEffect, useRef, useState } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import SearchBar from "@/components/SearchBar";
+import SearchInfo from "@/components/SearchInfo";
 import Link from "next/link";
 import useReactive from "@/hooks/useReactive";
 import Image from "next/image";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { FiArrowLeft, FiClock, FiSearch } from "react-icons/fi";
-
 // Progress bar component
 const ProgressBar = () => {
   const { scrollYProgress } = useScroll();
@@ -153,6 +154,7 @@ const SearchResultCard = ({ result, index }: { result: any; index: number }) => 
 };
 
 export default function SearchResultPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const searchTerm = searchParams.get("query");
 
@@ -163,7 +165,9 @@ export default function SearchResultPage() {
     currentPage: 1,
     itemsPerPage: 4,
     totalPages: 0,
+    searchQuery: searchTerm || "",
   });
+
 
   const getList = async () => {
     state.loading = true;
@@ -182,6 +186,12 @@ export default function SearchResultPage() {
     }
   };
 
+  const handleSearchClick = () => {
+    if (state.searchQuery.trim()) {
+      router.push(`/searchResults?query=${encodeURIComponent(state.searchQuery)}`);
+    }
+  };
+  
   const handlePageChange = (pageNumber: number) => {
     state.currentPage = pageNumber;
     getList();
@@ -192,133 +202,163 @@ export default function SearchResultPage() {
     getList();
   }, [searchTerm]);
 
-  return (
-    <>
-      <ProgressBar />
-      <div className="container mx-auto my-10 max-w-6xl px-4">
-        <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-          <Link href="/">
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-              className="group relative flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 text-white shadow-lg transition-all duration-300 hover:shadow-xl dark:from-blue-600 dark:to-blue-700"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-              <FiArrowLeft className="relative transition-transform duration-300 group-hover:-translate-x-1" />
-              <span className="relative">Return to Video Gallery</span>
-            </motion.button>
-          </Link>
-          
-          {state.metadata && (
-            <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="relative overflow-hidden rounded-lg bg-white/80 p-4 shadow-lg backdrop-blur-xl dark:bg-slate-800/80"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5" />
-              <div className="relative grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
-                <div className="text-slate-600 dark:text-slate-400">
-                  Type: <span className="font-medium text-slate-800 dark:text-slate-200">{state.metadata.searchType}</span>
-                </div>
-                <div className="text-slate-600 dark:text-slate-400">
-                  Level: <span className="font-medium text-slate-800 dark:text-slate-200">{state.metadata.level}</span>
-                </div>
-                <div className="text-slate-600 dark:text-slate-400">
-                  Results: <span className="font-medium text-slate-800 dark:text-slate-200">{state.metadata.totalResults}</span>
-                </div>
-              </div>
-            </motion.div>
-          )}
+return (
+  <>
+    <ProgressBar />
+    <div className="container mx-auto my-10 max-w-6xl px-4">
+      {/* Search Bar and Button */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-12 flex flex-col items-center gap-6"
+      >
+        <div className="w-full max-w-2xl">
+          <SearchBar
+            onSearch={(query: string) => {
+              state.searchQuery = query; // Update state with the query
+            }}
+          />
         </div>
 
-        <AnimatePresence mode="wait">
-          {state.loading ? (
-            <SearchResultSkeleton />
-          ) : state.searchResults.length > 0 ? (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="space-y-6"
-              >
-                {state.searchResults.map((result: any, index: number) => (
-                  <SearchResultCard key={result.vidID} result={result} index={index} />
-                ))}
-              </motion.div>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={handleSearchClick} // Trigger search when the button is clicked
+          disabled={!state.searchQuery.trim()} // Disable button if query is empty
+          className={`group relative flex items-center gap-2 overflow-hidden rounded-lg px-6 py-3 font-medium ${
+            state.searchQuery.trim()
+              ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white"
+              : "cursor-not-allowed bg-slate-300 text-slate-500"
+          }`}
+        >
+          <FiSearch className="relative text-lg" />
+          <span className="relative">View Search Results</span>
+        </motion.button>
+      </motion.div>
 
-              {state.totalPages > 1 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="mt-8 flex items-center justify-center gap-3"
-                >
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePageChange(state.currentPage - 1)}
-                    disabled={state.currentPage === 1}
-                    className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
-                      state.currentPage === 1
-                        ? "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
-                        : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                    }`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 hover:opacity-100" />
-                    <span className="relative">Previous</span>
-                  </motion.button>
+      {/* Search Metadata and Results */}
+      <div className="mb-8 flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
+        <Link href="/">
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+            className="group relative flex items-center gap-2 overflow-hidden rounded-lg bg-gradient-to-r from-blue-500 to-blue-600 px-6 py-3 text-white shadow-lg transition-all duration-300 hover:shadow-xl dark:from-blue-600 dark:to-blue-700"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+            <FiArrowLeft className="relative transition-transform duration-300 group-hover:-translate-x-1" />
+            <span className="relative">Return to Video Gallery</span>
+          </motion.button>
+        </Link>
 
-                  <div className="flex gap-2">
-                    {Array.from(
-                      { length: state.totalPages },
-                      (_, index) => index + 1
-                    ).map((pageNum) => (
-                      <motion.button
-                        key={pageNum}
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => handlePageChange(pageNum)}
-                        className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
-                          pageNum === state.currentPage
-                            ? "bg-blue-500 text-white shadow-lg shadow-blue-500/25 dark:bg-blue-600"
-                            : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                        }`}
-                      >
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 hover:opacity-100" />
-                        <span className="relative">{pageNum}</span>
-                      </motion.button>
-                    ))}
-                  </div>
-
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => handlePageChange(state.currentPage + 1)}
-                    disabled={state.currentPage === state.totalPages}
-                    className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
-                      state.currentPage === state.totalPages
-                        ? "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
-                        : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
-                    }`}
-                  >
-                    <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 to-purple-500/10 opacity-0 transition-opacity duration-300 hover:opacity-100" />
-                    <span className="relative">Next</span>
-                  </motion.button>
-                </motion.div>
-              )}
-            </>
-          ) : (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mt-12 text-center text-lg text-slate-500 dark:text-slate-400"
-            >
-              No results found for "{searchTerm}"
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {state.metadata && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="relative overflow-hidden rounded-lg bg-white/80 p-4 shadow-lg backdrop-blur-xl dark:bg-slate-800/80"
+          >
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 to-purple-500/5" />
+            <div className="relative grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
+              <div className="text-slate-600 dark:text-slate-400">
+                Type:{" "}
+                <span className="font-medium text-slate-800 dark:text-slate-200">
+                  {state.metadata.searchType}
+                </span>
+              </div>
+              <div className="text-slate-600 dark:text-slate-400">
+                Level:{" "}
+                <span className="font-medium text-slate-800 dark:text-slate-200">
+                  {state.metadata.level}
+                </span>
+              </div>
+              <div className="text-slate-600 dark:text-slate-400">
+                Results:{" "}
+                <span className="font-medium text-slate-800 dark:text-slate-200">
+                  {state.metadata.totalResults}
+                </span>
+              </div>
+            </div>
+          </motion.div>
+        )}
       </div>
-    </>
-  );
+
+      <AnimatePresence mode="wait">
+        {state.loading ? (
+          <SearchResultSkeleton />
+        ) : state.searchResults.length > 0 ? (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="space-y-6"
+            >
+              {state.searchResults.map((result: any, index: number) => (
+                <SearchResultCard key={result.vidID} result={result} index={index} />
+              ))}
+            </motion.div>
+
+            {state.totalPages > 1 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="mt-8 flex items-center justify-center gap-3"
+              >
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handlePageChange(state.currentPage - 1)}
+                  disabled={state.currentPage === 1}
+                  className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
+                    state.currentPage === 1
+                      ? "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
+                      : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  }`}
+                >
+                  Previous
+                </motion.button>
+                {Array.from({ length: state.totalPages }, (_, index) => index + 1).map(
+                  (pageNum) => (
+                    <motion.button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
+                        pageNum === state.currentPage
+                          ? "bg-blue-500 text-white"
+                          : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                      }`}
+                    >
+                      {pageNum}
+                    </motion.button>
+                  )
+                )}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handlePageChange(state.currentPage + 1)}
+                  disabled={state.currentPage === state.totalPages}
+                  className={`relative overflow-hidden rounded-lg px-4 py-2 font-medium transition-all duration-300 ${
+                    state.currentPage === state.totalPages
+                      ? "cursor-not-allowed bg-slate-300 dark:bg-slate-700"
+                      : "bg-slate-200 text-slate-700 hover:bg-slate-300 dark:bg-slate-700 dark:text-slate-200 dark:hover:bg-slate-600"
+                  }`}
+                >
+                  Next
+                </motion.button>
+              </motion.div>
+            )}
+          </>
+        ) : (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1 }}
+            className="mt-12 text-center text-lg text-slate-500 dark:text-slate-400"
+          >
+            No results found for "{state.searchQuery}"
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  </>
+);
 }
