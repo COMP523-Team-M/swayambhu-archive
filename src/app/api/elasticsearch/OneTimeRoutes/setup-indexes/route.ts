@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import client from "@/utils-ts/elasticsearch";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { redirect } from "next/navigation";
 
 async function setupIndices() {
   try {
@@ -81,6 +83,12 @@ async function setupIndices() {
 }
 
 export async function POST() {
+  const { isAuthenticated } = getKindeServerSession();
+  const isLoggedIn = await isAuthenticated();
+  if (!isLoggedIn) {
+    redirect("/api/auth/login");
+  }
+
   try {
     const result = await setupIndices();
     return NextResponse.json(result, { status: 200 });
