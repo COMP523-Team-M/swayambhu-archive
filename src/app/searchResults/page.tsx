@@ -132,7 +132,7 @@ const SearchResultCard = ({
           <Link href={`/video/${result.vidID}`}>
             <h2 className="font-outfit text-xl font-semibold text-slate-800 transition-colors duration-300 hover:text-blue-600 dark:text-slate-100 dark:hover:text-blue-400">
               {isSnippet
-                ? `Relevant Segment from Video ${result.vidTitle}`
+                ? `Relevant Segment from Video`
                 : result.vidTitle || `Video ${result.vidTitle}`}
             </h2>
           </Link>
