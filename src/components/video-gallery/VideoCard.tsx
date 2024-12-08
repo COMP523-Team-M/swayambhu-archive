@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import GalleryIcons from "./GalleryIcons";
+import { useKindeBrowserClient } from "@kinde-oss/kinde-auth-nextjs";
 
 export const VideoCard = ({
   video,
@@ -12,6 +13,8 @@ export const VideoCard = ({
   video: any;
   setIsInitialized: Dispatch<SetStateAction<boolean>>;
 }) => {
+  const { isAuthenticated } = useKindeBrowserClient();
+
   const cardRef = useRef<HTMLDivElement>(null);
 
   const [deleting, setDeleting] = useState(false);
@@ -108,12 +111,14 @@ export const VideoCard = ({
           {video.vidMoreInfo}
         </p>
         <div className="mt-auto pt-4">
-          <GalleryIcons
-            id={video.vidID}
-            handleDelete={handleDelete}
-            deleting={deleting}
-            alert={alert}
-          />
+          {isAuthenticated && (
+            <GalleryIcons
+              id={video.vidID}
+              handleDelete={handleDelete}
+              deleting={deleting}
+              alert={alert}
+            />
+          )}
         </div>
       </div>
     </motion.div>
