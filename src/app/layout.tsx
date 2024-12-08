@@ -1,18 +1,20 @@
 import type { Metadata } from "next";
-import localFont from "next/font/local";
-import Header from "@/components/Header";
+import Header from "@/components/header/Header";
 import "./globals.css";
-import { UploadProvider } from "@/context";
+import { UploadProvider } from "@/context/Uploads";
+import { Inter, Outfit } from "next/font/google";
+import { ThemeProvider } from "@/context/ThemeProvider";
 
-const geistSans = localFont({
-  src: "./fonts/GeistVF.woff",
-  variable: "--font-geist-sans",
-  weight: "100 900",
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
+  display: "swap",
 });
-const geistMono = localFont({
-  src: "./fonts/GeistMonoVF.woff",
-  variable: "--font-geist-mono",
-  weight: "100 900",
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
@@ -26,13 +28,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html>
+    <html lang="en" className={`${outfit.variable} ${inter.variable}`}>
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`bg-slate-50 font-sans antialiased selection:bg-blue-200 selection:text-blue-900 dark:bg-slate-900 dark:text-white dark:selection:bg-blue-800 dark:selection:text-white`}
       >
         <div className="container mx-auto min-h-screen">
-          <Header />
-          <UploadProvider>{children}</UploadProvider>
+          <ThemeProvider>
+            <Header />
+            <UploadProvider>{children}</UploadProvider>
+          </ThemeProvider>
         </div>
       </body>
     </html>

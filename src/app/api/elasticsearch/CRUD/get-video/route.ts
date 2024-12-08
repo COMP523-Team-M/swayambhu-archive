@@ -2,30 +2,30 @@ import { NextRequest, NextResponse } from "next/server";
 import client from "@/utils-ts/elasticsearch";
 
 // Using types from add-video route
-interface TranscriptWord {
+export interface TranscriptWord {
   startOffset?: string;
   endOffset: string;
   word: string;
   confidence: number;
 }
 
-interface TranscriptAlternative {
+export interface TranscriptAlternative {
   transcript: string;
   confidence: number;
   words: TranscriptWord[];
 }
 
-interface TranscriptResult {
+export interface TranscriptResult {
   alternatives: TranscriptAlternative[];
   resultEndOffset?: string;
   languageCode?: string;
 }
 
-interface TranscriptJson {
+export interface TranscriptJson {
   results: TranscriptResult[];
 }
 
-interface VideoData {
+export interface VideoData {
   vidID: string;
   vidTitle: string;
   vidDescription: string;

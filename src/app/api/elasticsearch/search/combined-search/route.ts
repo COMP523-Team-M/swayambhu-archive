@@ -6,6 +6,7 @@ interface SearchFilters {
   uploadDate?: string;
   location?: string;
   tags?: string[];
+  vidID?: string; // Added this
 }
 
 interface SearchOptions {
@@ -35,18 +36,21 @@ interface ElasticsearchQuery {
 }
 
 interface VideoDocument {
+  vidTitle: string;
   vidDescription: string;
   tags: string[];
   location?: string;
   transcript?: string;
   englishTranslation?: string;
   transcriptEmbedding?: number[];
+  vidID: string; // Added this
 }
 
 interface SnippetDocument {
   transcriptSnippet: string;
   englishTranslation?: string;
   snippetEmbedding?: number[];
+  vidID: string; // Added this
 }
 
 interface ElasticsearchHit {
@@ -78,7 +82,7 @@ export async function combinedSearch(
       embeddingLength: queryEmbedding?.length,
     });
 
-    const { uploadDate, location, tags } = filters;
+    const { uploadDate, location, tags, vidID } = filters;
     const embeddingField =
       index === "videos" ? "transcriptEmbedding" : "snippetEmbedding";
 
@@ -94,6 +98,7 @@ export async function combinedSearch(
                   fields:
                     index === "videos"
                       ? [
+                          "vidTitle^3",
                           "vidDescription^2",
                           "tags^1.5",
                           "location",
@@ -149,19 +154,25 @@ export async function combinedSearch(
     if (tags && tags.length > 0) {
       filterArray.push({ terms: { tags } });
     }
+    if (vidID) {
+      filterArray.push({ term: { vidID } }); // Added this - works for both videos and snippets
+    }
 
     combinedQuery.body.query.bool.filter = filterArray;
+
+    console.log(
+      "Executing combined search with query:",
+      JSON.stringify(combinedQuery, null, 2),
+    );
 
     const response = (await client.search(
       combinedQuery,
     )) as ElasticsearchResponse;
 
-    return response.hits.hits.map((hit: ElasticsearchHit) => {
-      return {
-        score: hit._score,
-        ...hit._source,
-      };
-    });
+    return response.hits.hits.map((hit: ElasticsearchHit) => ({
+      score: hit._score,
+      ...hit._source,
+    }));
   } catch (error) {
     console.error("\nCombined search error:", error);
     throw error;
@@ -177,6 +188,7 @@ export async function GET(request: NextRequest) {
   const uploadDate = searchParams.get("uploadDate");
   const location = searchParams.get("location");
   const tags = searchParams.get("tags");
+  const vidID = searchParams.get("vidID"); // Added this
 
   if (!query) {
     return NextResponse.json(
@@ -206,6 +218,7 @@ export async function GET(request: NextRequest) {
     if (uploadDate) filters.uploadDate = uploadDate;
     if (location) filters.location = location;
     if (tags) filters.tags = tags.split(",");
+    if (vidID) filters.vidID = vidID; // Added this
 
     const results = await combinedSearch(keywords, queryEmbedding, index, {
       filters,

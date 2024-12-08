@@ -1,20 +1,54 @@
 "use client";
 
-import { Upload } from "@/app/dashboard/page";
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { motion } from "framer-motion";
+import { FiClock, FiCheck, FiAlertCircle } from "react-icons/fi";
 
 interface Props {
   title: string;
-  status: "Pending" | "Done";
+  status: "Pending" | "Done" | "Error";
 }
 
 export default function UploadItem({ title, status }: Props) {
+  const statusConfig = {
+    Pending: {
+      icon: FiClock,
+      color: "text-blue-500",
+      bgColor: "bg-blue-500/10",
+      borderColor: "border-blue-500/20",
+    },
+    Done: {
+      icon: FiCheck,
+      color: "text-green-500",
+      bgColor: "bg-green-500/10",
+      borderColor: "border-green-500/20",
+    },
+    Error: {
+      icon: FiAlertCircle,
+      color: "text-red-500",
+      bgColor: "bg-red-500/10",
+      borderColor: "border-red-500/20",
+    },
+  };
+
+  const { icon: StatusIcon, color, bgColor, borderColor } = statusConfig[status];
+
   return (
-    <div className="mb-2 flex justify-between">
-      <p>{title}</p>
-      <p className={status === "Pending" ? "text-red-500" : "text-green-500"}>
-        {status}
-      </p>
-    </div>
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="group relative mb-2 overflow-hidden rounded-lg border bg-white/50 p-3 backdrop-blur-sm transition-all duration-300 hover:bg-white/80 dark:border-slate-700/50 dark:bg-slate-800/50 dark:hover:bg-slate-800/80"
+    >
+      {/* Gradient background */}
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 to-slate-400/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+
+      <div className="relative flex items-center justify-between">
+        <p className="truncate text-slate-700 dark:text-slate-200">{title}</p>
+        <div className={`flex items-center gap-2 rounded-full ${bgColor} ${borderColor} border px-3 py-1`}>
+          <StatusIcon className={`h-4 w-4 ${color}`} />
+          <span className={`text-sm font-medium ${color}`}>{status}</span>
+        </div>
+      </div>
+    </motion.div>
   );
 }

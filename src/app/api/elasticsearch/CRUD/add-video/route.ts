@@ -82,8 +82,15 @@ function extractTranscriptSegments(
 ): TranscriptSegment[] {
   return results.map((result, index) => {
     const alternative = result.alternatives[0];
-    const transcriptSnippet = alternative.transcript;
+    
+    // Add logging to check the original transcript
+    console.log("Extracting segment:", {
+      originalTranscript: alternative.transcript,
+      language: result.languageCode,
+      index: index
+    });
 
+    const transcriptSnippet = alternative.transcript;
     const firstWord = alternative.words[0];
     const lastWord = alternative.words[alternative.words.length - 1];
 
@@ -155,17 +162,32 @@ async function transcribeAudio(file: Buffer, name: string) {
   };
 
   const [operation] = await client.batchRecognize(transcriptionRequest);
-  console.log(await operation.promise());
+  console.log(operation);
 
-  const [files] = await storage.bucket("test-speech123").getFiles({
-    prefix: "transcripts/",
-  });
+  // Wait for the operation to complete
+  await operation.promise();
 
-  const transcriptFile = files.find(
-    (file) =>
-      file.name.includes(file.name.split(".")[0]) &&
-      file.name.includes("_transcript_"),
-  );
+  // Poll for the transcript file
+  let transcriptFile;
+  const maxRetries = 10;
+  let attempts = 0;
+
+  while (attempts < maxRetries) {
+    const [files] = await storage.bucket("test-speech123").getFiles({
+      prefix: "transcripts/",
+    });
+
+    transcriptFile = files.find(
+      (file) =>
+        file.name.includes(name.split(".")[0]) &&
+        file.name.includes("_transcript_"),
+    );
+
+    if (transcriptFile) break;
+
+    attempts++;
+    await new Promise((resolve) => setTimeout(resolve, 3000)); // Wait 3 seconds
+  }
 
   if (!transcriptFile) {
     throw new Error("Transcription result file not found.");
@@ -174,8 +196,6 @@ async function transcribeAudio(file: Buffer, name: string) {
   const [fileContent] = await transcriptFile.download();
 
   const transcriptJson: TranscriptJson = JSON.parse(fileContent.toString());
-
-  console.log("Transcription result:", transcriptJson);
 
   return transcriptJson;
 }
@@ -232,6 +252,7 @@ export async function POST(request: Request) {
     }
 
     const fileBuffer = Buffer.from(audio.content, "base64");
+    console.log(fileBuffer);
     const transcriptJson = await transcribeAudio(fileBuffer, audio.name);
 
     if (!transcriptJson || !transcriptJson.results) {
@@ -248,6 +269,8 @@ export async function POST(request: Request) {
     const transcriptText = transcriptJson.results
       .map((result) => result.alternatives[0].transcript)
       .join(" ");
+
+    console.log("Original full transcript:", transcriptText);
 
     const transcriptEmbedding = await generateEmbedding(transcriptText);
 
@@ -297,13 +320,27 @@ export async function POST(request: Request) {
       baseVideoURL,
     );
 
-    // Step 7: Add each transcript snippet to the 'video_snippets' index with generated embeddings
+    // Step 7: Add each transcript snippet to the 'video_snippets' index
     for (const segment of transcriptSegments) {
       const transcriptID = uuidv4();
+      
+      // Add logging before processing
+      console.log("Processing segment:", {
+        nepaliSnippet: segment.transcriptSnippet,
+        index: segment.transcriptSegmentIndex
+      });
+
       const snippetEmbedding = await generateEmbedding(
         segment.transcriptSnippet,
       );
       const englishSnippet = await translateText(segment.transcriptSnippet);
+
+      // Add logging after translation
+      console.log("After translation:", {
+        nepaliSnippet: segment.transcriptSnippet,
+        englishSnippet: englishSnippet,
+        index: segment.transcriptSegmentIndex
+      });
 
       await client.index({
         index: "video_snippets",

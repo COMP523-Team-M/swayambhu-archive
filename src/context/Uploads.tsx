@@ -4,13 +4,13 @@ import React, { createContext, useContext, useEffect, useState } from "react";
 
 interface Upload {
   title: string;
-  status: "Pending" | "Done";
+  status: "Pending" | "Done" | "Error";
 }
 
 interface UploadContextProps {
   uploads: Upload[];
   addUpload: (upload: Upload) => void;
-  updateStatus: (title: string, status: "Pending" | "Done") => void;
+  updateStatus: (title: string, status: "Pending" | "Done" | "Error") => void;
 }
 
 const UploadContext = createContext<UploadContextProps | undefined>(undefined);
@@ -30,10 +30,13 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addUpload = (upload: Upload) => {
-    setUploads((prev) => [...prev, upload]);
+    setUploads((prev) => [upload, ...prev]);
   };
 
-  const updateStatus = (title: string, status: "Pending" | "Done") => {
+  const updateStatus = (
+    title: string,
+    status: "Pending" | "Done" | "Error",
+  ) => {
     setUploads((prev) =>
       prev.map((upload) =>
         upload.title === title ? { ...upload, status } : upload,
