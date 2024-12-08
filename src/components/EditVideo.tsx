@@ -14,7 +14,7 @@ export default function EditVideo() {
   const [uploading, setUploading] = useState(false);
   const [changed, setChanged] = useState(false);
   const [data, setData] = useState<VideoData | null>(null);
-  const [showEnglish, setShowEnglish] = useState(true);
+  const [showEnglish, setShowEnglish] = useState(false);
 
   useEffect(() => {
     const getVideo = async () => {
@@ -33,9 +33,11 @@ export default function EditVideo() {
     e.target.style.height = `${e.target.scrollHeight}px`;
   };
 
-  const handleFormsubmit = (data: React.FormEvent<HTMLFormElement>) => {
-    data.preventDefault();
-    const form = new FormData(data.currentTarget);
+  const handleFormsubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const form = new FormData(e.currentTarget);
+
+    console.log(data);
 
     const transcription = form.getAll("transcriptUpdates") as string[];
     const transcriptionUpdates = transcription.map((value, index) => ({
@@ -286,19 +288,19 @@ export default function EditVideo() {
                 <textarea
                   className="min-h-fit w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
                   value={line.alternatives[0].transcript}
-                  onChange={(e) => {
-                    const newTranscript = e.target.value;
-                    setData((prevData) => {
-                      if (!prevData) return prevData;
-                      const updatedData = { ...prevData };
-                      updatedData.englishTranscriptJson.results[
-                        index
-                      ].alternatives[0].transcript = newTranscript;
-                      return updatedData;
-                    });
-                    setChanged(true);
-                    handleTextareaResize(e);
-                  }}
+                  // onChange={(e) => {
+                  //   const newTranscript = e.target.value;
+                  //   setData((prevData) => {
+                  //     if (!prevData) return prevData;
+                  //     const updatedData = { ...prevData };
+                  //     updatedData.englishTranscriptJson.results[
+                  //       index
+                  //     ].alternatives[0].transcript = newTranscript;
+                  //     return updatedData;
+                  //   });
+                  //   setChanged(true);
+                  //   handleTextareaResize(e);
+                  // }}
                   name="transcriptUpdates"
                 />
               </div>
