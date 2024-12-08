@@ -288,6 +288,7 @@ export default function EditVideo() {
                 <textarea
                   className="min-h-fit w-full rounded-lg bg-white/50 p-3 text-sm shadow-md outline-none ring-1 ring-slate-200 transition-colors duration-300 focus:ring-2 focus:ring-blue-500 dark:bg-slate-800/50 dark:text-slate-200 dark:ring-slate-700"
                   value={line.alternatives[0].transcript}
+                  readOnly
                   // onChange={(e) => {
                   //   const newTranscript = e.target.value;
                   //   setData((prevData) => {
@@ -301,7 +302,7 @@ export default function EditVideo() {
                   //   setChanged(true);
                   //   handleTextareaResize(e);
                   // }}
-                  name="transcriptUpdates"
+                  name="readOnly"
                 />
               </div>
             ))}
