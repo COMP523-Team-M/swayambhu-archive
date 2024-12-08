@@ -32,12 +32,12 @@ export default function RootLayout({
       <body
         className={`bg-slate-50 font-sans antialiased selection:bg-blue-200 selection:text-blue-900 dark:bg-slate-900 dark:text-white dark:selection:bg-blue-800 dark:selection:text-white`}
       >
-        <div className="container mx-auto min-h-screen">
-          <ThemeProvider>
-            <Header />
+        <ThemeProvider>
+          <Header />
+          <div className="container mx-auto min-h-fit">
             <UploadProvider>{children}</UploadProvider>
-          </ThemeProvider>
-        </div>
+          </div>
+        </ThemeProvider>
       </body>
     </html>
   );
