@@ -3,7 +3,6 @@ import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import Image from "next/image";
 import Link from "next/link";
 import ThemeButton from "./ThemeButton";
-import { motion } from "framer-motion";
 import { FiGrid } from "react-icons/fi";
 
 export default async function Header() {
@@ -15,7 +14,7 @@ export default async function Header() {
       <div className="relative">
         {/* Gradient line at bottom */}
         <div className="absolute bottom-0 h-[1px] w-full bg-gradient-to-r from-transparent via-slate-200 to-transparent opacity-50 dark:via-slate-800" />
-        
+
         <div className="flex items-center justify-between p-5">
           <div className="flex items-center gap-x-5">
             <Link href={"/"} className="group flex items-center">
@@ -47,7 +46,7 @@ export default async function Header() {
                 </Link>
               </div>
             )}
-            
+
             <div className="transition-transform duration-300 hover:scale-105">
               {isLoggedIn ? (
                 <LogoutLink className="flex items-center gap-2 rounded-lg bg-white/50 px-4 py-2 font-medium text-slate-700 shadow-sm backdrop-blur-sm transition-all duration-300 hover:bg-white/80 hover:text-blue-600 dark:bg-slate-800/50 dark:text-slate-200 dark:hover:bg-slate-800/80 dark:hover:text-blue-400">
@@ -59,7 +58,7 @@ export default async function Header() {
                 </LoginLink>
               )}
             </div>
-            
+
             <ThemeButton />
           </div>
         </div>

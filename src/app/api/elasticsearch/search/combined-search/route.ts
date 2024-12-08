@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import client from "@/utils-ts/elasticsearch";
 import { generateEmbedding } from "@/utils-ts/generateEmbeddings";

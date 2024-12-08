@@ -1,9 +1,10 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import SearchBar from "@/components/SearchBar";
-import SearchInfo from "@/components/SearchInfo";
 import Link from "next/link";
 import useReactive from "@/hooks/useReactive";
 import Image from "next/image";
@@ -381,7 +382,7 @@ export default function SearchResultPage() {
               animate={{ opacity: 1 }}
               className="mt-12 text-center text-lg text-slate-500 dark:text-slate-400"
             >
-              No results found for "{state.searchQuery}"
+              No results found for &quot;{state.searchQuery}&quot;
             </motion.div>
           )}
         </AnimatePresence>
