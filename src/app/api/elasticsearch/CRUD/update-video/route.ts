@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import client from "@/utils-ts/elasticsearch";
 import { generateEmbedding } from "@/utils-ts/generateEmbeddings";
 import { v4 as uuidv4 } from "uuid";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { redirect } from "next/navigation";
 
 // Type definitions for transcript
 interface TranscriptWord {
@@ -88,6 +90,12 @@ async function translateText(text: string): Promise<string> {
 }
 
 export async function PUT(request: NextRequest) {
+  const { isAuthenticated } = getKindeServerSession();
+  const isLoggedIn = await isAuthenticated();
+  if (!isLoggedIn) {
+    redirect("/api/auth/login");
+  }
+
   try {
     const body: UpdateRequestBody = await request.json();
     const { vidID, transcriptUpdates, ...metadataUpdates } = body;

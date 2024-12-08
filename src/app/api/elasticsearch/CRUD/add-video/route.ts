@@ -3,6 +3,8 @@ import { v4 as uuidv4 } from "uuid";
 import { generateEmbedding } from "@/utils-ts/generateEmbeddings";
 import speech from "@google-cloud/speech";
 import { Storage } from "@google-cloud/storage";
+import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
+import { redirect } from "next/navigation";
 
 // Type definitions
 interface TranscriptWord {
@@ -82,12 +84,12 @@ function extractTranscriptSegments(
 ): TranscriptSegment[] {
   return results.map((result, index) => {
     const alternative = result.alternatives[0];
-    
+
     // Add logging to check the original transcript
     console.log("Extracting segment:", {
       originalTranscript: alternative.transcript,
       language: result.languageCode,
-      index: index
+      index: index,
     });
 
     const transcriptSnippet = alternative.transcript;
@@ -231,6 +233,12 @@ async function translateText(text: string): Promise<string> {
 }
 
 export async function POST(request: Request) {
+  const { isAuthenticated } = getKindeServerSession();
+  const isLoggedIn = await isAuthenticated();
+  if (!isLoggedIn) {
+    redirect("/api/auth/login");
+  }
+
   try {
     const body: RequestBody = await request.json();
     const {
@@ -323,11 +331,11 @@ export async function POST(request: Request) {
     // Step 7: Add each transcript snippet to the 'video_snippets' index
     for (const segment of transcriptSegments) {
       const transcriptID = uuidv4();
-      
+
       // Add logging before processing
       console.log("Processing segment:", {
         nepaliSnippet: segment.transcriptSnippet,
-        index: segment.transcriptSegmentIndex
+        index: segment.transcriptSegmentIndex,
       });
 
       const snippetEmbedding = await generateEmbedding(
@@ -339,7 +347,7 @@ export async function POST(request: Request) {
       console.log("After translation:", {
         nepaliSnippet: segment.transcriptSnippet,
         englishSnippet: englishSnippet,
-        index: segment.transcriptSegmentIndex
+        index: segment.transcriptSegmentIndex,
       });
 
       await client.index({
