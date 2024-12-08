@@ -1,16 +1,14 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest, NextResponse } from "next/server";
 import { analyzeQuery } from "@/utils-ts/analyzeQuery";
+import client from "@/utils-ts/elasticsearch";
 import {
   searchVideos,
   searchSnippets,
-} from "@/app/api/elasticsearch/search/keyword-search/route";
-import {
   semanticSearchVideos,
   semanticSearchSnippets,
-} from "@/app/api/elasticsearch/search/semantic-search/route";
-import { combinedSearch } from "@/app/api/elasticsearch/search/combined-search/route";
-import client from "@/utils-ts/elasticsearch";
+  combinedSearch,
+} from "../elasticsearch/search/functions";
 
 // Base interface for shared properties
 interface BaseDocument {

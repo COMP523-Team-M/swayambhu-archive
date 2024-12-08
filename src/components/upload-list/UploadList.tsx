@@ -18,7 +18,7 @@ export default function UploadList() {
       {/* Gradient background effect */}
       <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-purple-500/5 to-pink-500/5 blur-xl" />
 
-      <div className="relative flex min-h-96 w-80 flex-col overflow-hidden rounded-3xl bg-white/80 p-8 shadow-xl backdrop-blur-xl transition-all duration-500 hover:shadow-2xl dark:bg-slate-800/80">
+      <div className="relative flex min-h-96 w-96 flex-col overflow-hidden rounded-3xl bg-white/80 p-8 shadow-xl backdrop-blur-xl transition-all duration-500 hover:shadow-2xl dark:bg-slate-800/80">
         {/* Header */}
         <motion.div initial={{ y: -20 }} animate={{ y: 0 }} className="mb-6">
           <div className="flex items-center justify-between border-b border-slate-200 pb-4 dark:border-slate-700">

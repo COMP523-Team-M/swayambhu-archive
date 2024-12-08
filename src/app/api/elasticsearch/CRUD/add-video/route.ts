@@ -5,55 +5,12 @@ import speech from "@google-cloud/speech";
 import { Storage } from "@google-cloud/storage";
 import { getKindeServerSession } from "@kinde-oss/kinde-auth-nextjs/server";
 import { redirect } from "next/navigation";
-
-// Type definitions
-interface TranscriptWord {
-  startOffset?: string;
-  endOffset: string;
-  word: string;
-  confidence: number;
-}
-
-interface TranscriptAlternative {
-  transcript: string;
-  confidence: number;
-  words: TranscriptWord[];
-}
-
-interface TranscriptResult {
-  alternatives: TranscriptAlternative[];
-  resultEndOffset?: string;
-  languageCode?: string;
-}
-
-interface TranscriptJson {
-  results: TranscriptResult[];
-}
-
-interface RequestBody {
-  vidTitle: string;
-  vidDescription: string;
-  uploadDate: string;
-  recordDate: string;
-  location: string;
-  audio: Audio;
-  tags: string[];
-  baseVideoURL: string;
-}
-
-interface Audio {
-  name: string;
-  type: string;
-  content: string;
-}
-
-interface TranscriptSegment {
-  transcriptSnippet: string;
-  startTime: number;
-  endTime: number;
-  videoLinkToSnippet: string;
-  transcriptSegmentIndex: number;
-}
+import {
+  TranscriptResult,
+  TranscriptJson,
+  TranscriptSegment,
+  RequestBody,
+} from "../../../interfaces";
 
 /**
  * Extracts YouTube video ID from a YouTube URL
