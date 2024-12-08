@@ -51,7 +51,7 @@ export default function UploadItem({ title, status }: Props) {
       <div className="absolute inset-0 bg-gradient-to-r from-slate-500/5 to-slate-400/5 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
       <div className="relative flex items-center justify-between">
-        <div className="flex items-center">
+        <div className="flex w-full flex-grow items-center">
           <motion.div
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.9 }}
@@ -62,7 +62,9 @@ export default function UploadItem({ title, status }: Props) {
               className="mr-3 cursor-pointer hover:text-blue-500"
             />
           </motion.div>
-          <p className="truncate text-slate-700 dark:text-slate-200">{title}</p>
+          <p className="max-w-40 truncate text-slate-700 dark:text-slate-200">
+            {title}
+          </p>
         </div>
         <div
           className={`flex items-center gap-2 rounded-full ${bgColor} ${borderColor} border px-3 py-1`}

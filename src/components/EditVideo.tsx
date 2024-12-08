@@ -2,7 +2,7 @@
 
 import { useParams, useRouter } from "next/navigation";
 import React, { useEffect, useState } from "react";
-import { VideoData } from "@/app/api/elasticsearch/CRUD/get-video/route";
+import { VideoData } from "@/app/api/interfaces";
 import { motion, AnimatePresence } from "framer-motion";
 import { FiLoader, FiCheck, FiEdit3 } from "react-icons/fi";
 
