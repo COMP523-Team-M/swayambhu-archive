@@ -11,6 +11,7 @@ interface UploadContextProps {
   uploads: Upload[];
   addUpload: (upload: Upload) => void;
   updateStatus: (title: string, status: "Pending" | "Done" | "Error") => void;
+  deleteUpload: (title: string) => void;
 }
 
 const UploadContext = createContext<UploadContextProps | undefined>(undefined);
@@ -44,6 +45,14 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  const deleteUpload = (title: string) => {
+    setUploads((prev) => {
+      const newArray = [...prev];
+      newArray.splice(newArray.map((e) => e.title).indexOf(title), 1);
+      return newArray;
+    });
+  };
+
   useEffect(() => {
     if (typeof window !== "undefined" && isHydrated) {
       localStorage.setItem("uploads", JSON.stringify(uploads));
@@ -51,7 +60,9 @@ export function UploadProvider({ children }: { children: React.ReactNode }) {
   }, [uploads, isHydrated]);
 
   return (
-    <UploadContext.Provider value={{ uploads, addUpload, updateStatus }}>
+    <UploadContext.Provider
+      value={{ uploads, addUpload, updateStatus, deleteUpload }}
+    >
       {children}
     </UploadContext.Provider>
   );

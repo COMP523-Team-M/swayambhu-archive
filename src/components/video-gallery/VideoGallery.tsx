@@ -1,22 +1,21 @@
-"use client";
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useState } from "react";
 import SearchBar from "../SearchBar";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
-import Image from "next/image";
 import useReactive from "@/hooks/useReactive";
-import GalleryIcons from "./GalleryIcons";
 import SearchInfo from "./SearchInfo";
 import { motion, AnimatePresence, useScroll, useSpring } from "framer-motion";
 import { FiSearch } from "react-icons/fi";
+import { VideoCard } from "./VideoCard";
 
 const ProgressBar = () => {
   const { scrollYProgress } = useScroll();
   const scaleX = useSpring(scrollYProgress, {
     stiffness: 100,
     damping: 30,
-    restDelta: 0.001
+    restDelta: 0.001,
   });
 
   return (
@@ -30,8 +29,8 @@ const ProgressBar = () => {
 const GallerySkeleton = () => (
   <div className="space-y-8">
     {[1, 2, 3, 4].map((i) => (
-      <div 
-        key={i} 
+      <div
+        key={i}
         className="relative overflow-hidden rounded-xl bg-white/50 p-6 backdrop-blur-lg transition-all duration-500 dark:bg-slate-800/50"
       >
         <div className="absolute inset-0 -translate-x-full animate-[shimmer_2s_infinite] bg-gradient-to-r from-transparent via-white/10 to-transparent" />
@@ -49,82 +48,6 @@ const GallerySkeleton = () => (
     ))}
   </div>
 );
-
-const VideoCard = ({ video }: { video: any }) => {
-  const cardRef = useRef<HTMLDivElement>(null);
-
-  const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
-    const card = cardRef.current;
-    const rect = card.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
-    
-    const centerX = rect.width / 2;
-    const centerY = rect.height / 2;
-    const rotateX = (y - centerY) / 20;
-    const rotateY = (centerX - x) / 20;
-
-    card.style.transform = `perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg) scale3d(1.02, 1.02, 1.02)`;
-  };
-
-  const handleMouseLeave = () => {
-    if (!cardRef.current) return;
-    cardRef.current.style.transform = 'perspective(1000px) rotateX(0deg) rotateY(0deg) scale3d(1, 1, 1)';
-  };
-
-  return (
-    <motion.div
-      ref={cardRef}
-      initial={{ opacity: 0, y: 50 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -50 }}
-      transition={{ 
-        duration: 0.5,
-        type: "spring",
-        stiffness: 100 
-      }}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      className="group relative mb-5 flex overflow-hidden rounded-xl bg-white/80 p-6 shadow-lg backdrop-blur-xl transition-all duration-300 hover:shadow-2xl dark:bg-slate-800/80 dark:shadow-slate-700/20 last:mb-0"
-    >
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-pink-500/10 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
-      <div className="absolute inset-0 bg-grid-white/[0.02] bg-[size:20px_20px] [mask-image:linear-gradient(0deg,white,transparent)]" />
-      
-      <div className="relative mr-5">
-        <div className="relative h-[135px] w-[240px] overflow-hidden rounded-lg shadow-md">
-          <Image
-            src={`https://img.youtube.com/vi/${video.baseVideoURL.split("=")[1]}/0.jpg`}
-            alt="Video thumbnail"
-            fill
-            className="transform object-cover transition-transform duration-300 group-hover:scale-105"
-            priority={false}
-            unoptimized
-          />
-        </div>
-      </div>
-
-      <div className="relative flex w-80 flex-col">
-        <Link
-          href={`/video/${video.vidID}`}
-          className="text-xl font-semibold text-blue-600 transition-colors duration-300 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
-        >
-          {video.vidTitle}
-        </Link>
-
-        <p className="mt-2 text-slate-700 dark:text-slate-200">
-          {video.vidDescription}
-        </p>
-        <p className="mt-1 text-slate-600 dark:text-slate-300">
-          {video.vidMoreInfo}
-        </p>
-        <div className="mt-auto pt-4">
-          <GalleryIcons id={video.vidID} />
-        </div>
-      </div>
-    </motion.div>
-  );
-};
 
 const VideoGallery: React.FC = () => {
   const router = useRouter();
@@ -165,8 +88,9 @@ const VideoGallery: React.FC = () => {
   };
 
   useEffect(() => {
+    console.log("yeet");
     getList();
-  }, []);
+  }, [isInitialized]);
 
   const getCurrentPageData = () => {
     const startIndex = (state.currentPage - 1) * state.itemsPerPage;
@@ -176,20 +100,20 @@ const VideoGallery: React.FC = () => {
 
   const handlePageChange = (pageNumber: number) => {
     state.currentPage = pageNumber;
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    // window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   return (
     <>
       <ProgressBar />
       <div className="container mx-auto max-w-6xl px-4 py-10">
-        <motion.h1 
+        {/* <motion.h1
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           className="mb-8 text-center text-3xl font-semibold text-slate-800 dark:text-slate-200"
         >
           Video Gallery
-        </motion.h1>
+        </motion.h1> */}
 
         <SearchInfo />
 
@@ -235,7 +159,11 @@ const VideoGallery: React.FC = () => {
               className="space-y-6"
             >
               {getCurrentPageData().map((video: any) => (
-                <VideoCard key={video.vidID} video={video} />
+                <VideoCard
+                  key={video.vidID}
+                  video={video}
+                  setIsInitialized={setIsInitialized}
+                />
               ))}
 
               {state.list.length > 0 && (
