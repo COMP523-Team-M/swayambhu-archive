@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import client from "@/utils-ts/elasticsearch";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   try {
     const response = await client.search({
