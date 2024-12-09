@@ -23,7 +23,6 @@ export default function EditVideo() {
       );
       const fetchedData: VideoData = await response.json();
       setData(fetchedData);
-      console.log(fetchedData);
     };
     getVideo();
   }, [id]);
@@ -37,15 +36,11 @@ export default function EditVideo() {
     e.preventDefault();
     const form = new FormData(e.currentTarget);
 
-    console.log(data);
-
     const transcription = form.getAll("transcriptUpdates") as string[];
     const transcriptionUpdates = transcription.map((value, index) => ({
       segmentIndex: index,
       newTranscript: value,
     }));
-
-    console.log(transcriptionUpdates);
 
     const body = {
       vidID: id,
@@ -62,7 +57,7 @@ export default function EditVideo() {
     setUploading(true);
     setShowAlert(true);
 
-    fetch("http://localhost:3000/api/elasticsearch/CRUD/update-video", {
+    fetch("/api/elasticsearch/CRUD/update-video", {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
