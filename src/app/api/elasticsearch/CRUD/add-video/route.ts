@@ -75,6 +75,9 @@ function extractTranscriptSegments(
  * Transcribes a given text using Google Cloud Speech-to-Text API.
  */
 async function transcribeAudio(file: Buffer, name: string) {
+  process.env.GOOGLE_APPLICATION_CREDENTIALS =
+    "classwork4-439721-7209a5dbe146.json";
+
   if (!file) throw new Error("No file provided");
 
   const storage = new Storage();
