@@ -23,3 +23,7 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 The codebase runs on Next.js, and any code changes will automatically reflect in the browser.
+
+### Deployment
+
+The current project is running on [Carolina CloudApps](https://swayambhu-archive-dept-swayambhu-stories.apps.cloudapps.unc.edu/)
