@@ -89,7 +89,6 @@ const VideoGallery: React.FC = () => {
   };
 
   useEffect(() => {
-    console.log("yeet");
     getList();
   }, [isInitialized]);
 
