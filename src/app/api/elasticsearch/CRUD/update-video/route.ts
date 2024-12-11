@@ -219,22 +219,65 @@ export async function PUT(request: NextRequest) {
         if (transcriptEmbedding && transcriptText && nepaliTranscript) {
           const englishTranscript = await translateText(transcriptText);
 
+          const splitTranscriptByIntervals = (
+            fullTranscript: string,
+            nepaliIntervals: TranscriptJson["results"],
+          ): TranscriptJson["results"] => {
+            let currentPosition = 0;
+
+            return nepaliIntervals.map((result) => {
+              const { transcript: nepaliSegment } = result.alternatives[0];
+              const segmentLength = nepaliSegment.length;
+
+              // Extract the corresponding English segment
+              const englishSegment = fullTranscript.slice(
+                currentPosition,
+                currentPosition + segmentLength,
+              );
+
+              // Update the position tracker
+              currentPosition += segmentLength;
+
+              return {
+                alternatives: [
+                  {
+                    ...result.alternatives[0],
+                    transcript: englishSegment,
+                  },
+                ],
+              };
+            });
+          };
+
+          // Use the splitting function to generate the English intervals
           const englishTranscriptJson: TranscriptJson = {
-            results: await Promise.all(
-              nepaliTranscript.results.map(
-                async (result: TranscriptResult) => ({
-                  alternatives: [
-                    {
-                      ...result.alternatives[0],
-                      transcript: await translateText(
-                        result.alternatives[0].transcript,
-                      ),
-                    },
-                  ],
-                }),
-              ),
+            results: splitTranscriptByIntervals(
+              englishTranscript,
+              nepaliTranscript.results,
             ),
           };
+
+          console.log(englishTranscript);
+          console.log(transcriptText);
+
+          return;
+
+          // const englishTranscriptJson: TranscriptJson = {
+          //   results: await Promise.all(
+          //     nepaliTranscript.results.map(
+          //       async (result: TranscriptResult) => ({
+          //         alternatives: [
+          //           {
+          //             ...result.alternatives[0],
+          //             transcript: await translateText(
+          //               result.alternatives[0].transcript,
+          //             ),
+          //           },
+          //         ],
+          //       }),
+          //     ),
+          //   ),
+          // };
 
           updateBody.doc = {
             ...updateBody.doc,

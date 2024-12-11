@@ -282,24 +282,47 @@ export async function POST(request: Request) {
 
     const transcriptEmbedding = await generateEmbedding(transcriptText);
 
+    // Step 4: Translate full transcript to English
+    const englishTranscript = await translateText(transcriptText);
+
     // Step 3: Create English version of transcript JSON
-    const englishTranscriptJson = {
-      results: await Promise.all(
-        transcriptJson.results.map(async (result) => ({
+    const splitTranscriptByIntervals = (
+      fullTranscript: string,
+      nepaliIntervals: TranscriptJson["results"],
+    ): TranscriptJson["results"] => {
+      let currentPosition = 0;
+
+      return nepaliIntervals.map((result) => {
+        const { transcript: nepaliSegment } = result.alternatives[0];
+        const segmentLength = nepaliSegment.length;
+
+        // Extract the corresponding English segment
+        const englishSegment = fullTranscript.slice(
+          currentPosition,
+          currentPosition + segmentLength,
+        );
+
+        // Update the position tracker
+        currentPosition += segmentLength;
+
+        return {
           alternatives: [
             {
               ...result.alternatives[0],
-              transcript: await translateText(
-                result.alternatives[0].transcript,
-              ),
+              transcript: englishSegment,
             },
           ],
-        })),
-      ),
+        };
+      });
     };
 
-    // Step 4: Translate full transcript to English
-    const englishTranscript = await translateText(transcriptText);
+    // Use the splitting function to generate the English intervals
+    const englishTranscriptJson: TranscriptJson = {
+      results: splitTranscriptByIntervals(
+        englishTranscript,
+        transcriptJson.results,
+      ),
+    };
 
     // Step 5: Insert metadata and full transcript with embedding into the 'videos' index
     await client.index({

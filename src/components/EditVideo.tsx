@@ -42,8 +42,8 @@ export default function EditVideo() {
     const enTranscription = form.getAll("enTranscriptUpdates") as string[];
     const neTranscription = form.getAll("neTranscriptUpdates") as string[];
 
-    const enString = enTranscription.join(" ");
-    const neString = neTranscription.join(" ");
+    const enString = enTranscription.join("");
+    const neString = neTranscription.join("");
 
     console.log(enString);
     console.log(neString);
@@ -58,12 +58,17 @@ export default function EditVideo() {
       type = "english";
     } else type = "nepali";
 
-    const transcriptionUpdates = transcription.map((value, index) => ({
+    console.log(type);
+
+    const enUpdates = enTranscription.map((value, index) => ({
       segmentIndex: index,
       newTranscript: value,
     }));
 
-    console.log(transcriptionUpdates);
+    const neUpdates = neTranscription.map((value, index) => ({
+      segmentIndex: index,
+      newTranscript: value,
+    }));
 
     const body = {
       vidID: id,
@@ -74,7 +79,9 @@ export default function EditVideo() {
       recordDate: form.get("recordDate"),
       location: form.get("location"),
       tags: form.get("tags"),
-      transcriptUpdates: transcriptionUpdates,
+      updateType: type,
+      transcriptEnUpdates: enUpdates,
+      transcriptNeUpdates: neUpdates,
     };
 
     setUploading(true);
